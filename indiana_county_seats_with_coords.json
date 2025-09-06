@@ -1,0 +1,554 @@
+{
+  "Evansville": {
+    "lat": 37.973585,
+    "lon": -87.567388,
+    "county": "Vanderburgh County",
+    "region": "Southwest"
+  },
+  "Petersburg": {
+    "lat": 38.491567,
+    "lon": -87.278844,
+    "county": "Pike County",
+    "region": "Southwest"
+  },
+  "Washington": {
+    "lat": 38.659387,
+    "lon": -87.171883,
+    "county": "Daviess County",
+    "region": "South Central"
+  },
+  "Vincennes": {
+    "lat": 38.676353,
+    "lon": -87.526877,
+    "county": "Knox County",
+    "region": "Southwest"
+  },
+  "Columbus": {
+    "lat": 39.201702,
+    "lon": -85.920033,
+    "county": "Bartholomew County",
+    "region": "South Central"
+  },
+  "Franklin": {
+    "lat": 39.479841,
+    "lon": -86.05618,
+    "county": "Johnson County",
+    "region": "Central"
+  },
+  "Jeffersonville": {
+    "lat": 38.356805,
+    "lon": -85.663803,
+    "county": "Clark County",
+    "region": "Southeast"
+  },
+  "Bloomington": {
+    "lat": 39.170616,
+    "lon": -86.53731,
+    "county": "Monroe County",
+    "region": "South Central"
+  },
+  "Madison": {
+    "lat": 38.735975,
+    "lon": -85.376773,
+    "county": "Jefferson County",
+    "region": "Southeast"
+  },
+  "Terre Haute": {
+    "lat": 39.460198,
+    "lon": -87.415872,
+    "county": "Vigo County",
+    "region": "West Central"
+  },
+  "Marion": {
+    "lat": 40.557644,
+    "lon": -85.658192,
+    "county": "Grant County",
+    "region": ""
+  },
+  "Winchester": {
+    "lat": 40.172062,
+    "lon": -84.98193,
+    "county": "Randolph County",
+    "region": "East Central"
+  },
+  "Jasper": {
+    "lat": 38.391426,
+    "lon": -86.930831,
+    "county": "Dubois County",
+    "region": "Southwest"
+  },
+  "Bluffton": {
+    "lat": 40.738931,
+    "lon": -85.173575,
+    "county": "Wells County",
+    "region": "Northeast"
+  },
+  "Bedford": {
+    "lat": 38.861572,
+    "lon": -86.483193,
+    "county": "Lawrence County",
+    "region": "South Central"
+  },
+  "Noblesville": {
+    "lat": 40.046067,
+    "lon": -86.015338,
+    "county": "Hamilton County",
+    "region": "Central"
+  },
+  "Rockport": {
+    "lat": 37.882624,
+    "lon": -87.046678,
+    "county": "Spencer County",
+    "region": "Southwest"
+  },
+  "Auburn": {
+    "lat": 41.366455,
+    "lon": -85.055219,
+    "county": "DeKalb County",
+    "region": "North"
+  },
+  "Rochester": {
+    "lat": 41.06547,
+    "lon": -86.215113,
+    "county": "Rochester County",
+    "region": ""
+  },
+  "La Porte": {
+    "lat": 41.612116,
+    "lon": -86.722873,
+    "county": "La Porte County",
+    "region": ""
+  },
+  "Albion": {
+    "lat": 41.396074,
+    "lon": -85.424633,
+    "county": "Albion County",
+    "region": ""
+  },
+  "Boonville": {
+    "lat": 38.049512,
+    "lon": -87.274983,
+    "county": "Boonville County",
+    "region": ""
+  },
+  "Anderson": {
+    "lat": 40.107484,
+    "lon": -85.67866,
+    "county": "Anderson County",
+    "region": ""
+  },
+  "Winamac": {
+    "lat": 41.050849,
+    "lon": -86.603337,
+    "county": "Winamac County",
+    "region": ""
+  },
+  "Peru": {
+    "lat": 40.754415,
+    "lon": -86.06898,
+    "county": "Peru County",
+    "region": ""
+  },
+  "Williamsport": {
+    "lat": 40.287966,
+    "lon": -87.293833,
+    "county": "Williamsport County",
+    "region": ""
+  },
+  "Kokomo": {
+    "lat": 40.488083,
+    "lon": -86.130915,
+    "county": "Kokomo County",
+    "region": ""
+  },
+  "Decatur": {
+    "lat": 40.828114,
+    "lon": -84.925398,
+    "county": "Decatur County",
+    "region": ""
+  },
+  "Columbia City": {
+    "lat": 41.157283,
+    "lon": -85.490833,
+    "county": "Columbia City County",
+    "region": ""
+  },
+  "Crown Point": {
+    "lat": 41.447993,
+    "lon": -87.369939,
+    "county": "Crown Point County",
+    "region": ""
+  },
+  "Delphi": {
+    "lat": 40.586365,
+    "lon": -86.674796,
+    "county": "Delphi County",
+    "region": ""
+  },
+  "Connersville": {
+    "lat": 39.64082,
+    "lon": -85.140563,
+    "county": "Connersville County",
+    "region": ""
+  },
+  "Crawfordsville": {
+    "lat": 40.064128,
+    "lon": -86.912914,
+    "county": "Crawfordsville County",
+    "region": ""
+  },
+  "Greensburg": {
+    "lat": 39.337218,
+    "lon": -85.483475,
+    "county": "Greensburg County",
+    "region": ""
+  },
+  "Goshen": {
+    "lat": 41.587421,
+    "lon": -85.838177,
+    "county": "Goshen County",
+    "region": ""
+  },
+  "Greencastle": {
+    "lat": 39.644373,
+    "lon": -86.864968,
+    "county": "Greencastle County",
+    "region": ""
+  },
+  "Hartford City": {
+    "lat": 40.45175,
+    "lon": -85.367962,
+    "county": "Hartford City County",
+    "region": ""
+  },
+  "Monticello": {
+    "lat": 40.745219,
+    "lon": -86.7627,
+    "county": "Monticello County",
+    "region": ""
+  },
+  "Logansport": {
+    "lat": 40.754712,
+    "lon": -86.366868,
+    "county": "Logansport County",
+    "region": ""
+  },
+  "Lawrenceburg": {
+    "lat": 39.09131,
+    "lon": -84.850352,
+    "county": "Lawrenceburg County",
+    "region": ""
+  },
+  "Knox": {
+    "lat": 41.299536,
+    "lon": -86.622246,
+    "county": "Knox County",
+    "region": "Southwest"
+  },
+  "Lafayette": {
+    "lat": 40.417991,
+    "lon": -86.894521,
+    "county": "Lafayette County",
+    "region": ""
+  },
+  "Muncie": {
+    "lat": 40.194241,
+    "lon": -85.38731,
+    "county": "Muncie County",
+    "region": ""
+  },
+  "Martinsville": {
+    "lat": 39.425218,
+    "lon": -86.428927,
+    "county": "Martinsville County",
+    "region": ""
+  },
+  "Lebanon": {
+    "lat": 40.048642,
+    "lon": -86.468507,
+    "county": "Lebanon County",
+    "region": ""
+  },
+  "New Castle": {
+    "lat": 39.930436,
+    "lon": -85.371398,
+    "county": "New Castle County",
+    "region": ""
+  },
+  "Portland": {
+    "lat": 40.433888,
+    "lon": -84.978766,
+    "county": "Portland County",
+    "region": ""
+  },
+  "Salem": {
+    "lat": 38.605672,
+    "lon": -86.100769,
+    "county": "Salem County",
+    "region": ""
+  },
+  "Rensselaer": {
+    "lat": 40.935868,
+    "lon": -87.150941,
+    "county": "Rensselaer County",
+    "region": ""
+  },
+  "Sullivan": {
+    "lat": 39.094888,
+    "lon": -87.407705,
+    "county": "Sullivan County",
+    "region": ""
+  },
+  "Shelbyville": {
+    "lat": 39.521333,
+    "lon": -85.778476,
+    "county": "Shelbyville County",
+    "region": ""
+  },
+  "South Bend": {
+    "lat": 41.675147,
+    "lon": -86.252761,
+    "county": "South Bend County",
+    "region": ""
+  },
+  "Plymouth": {
+    "lat": 41.34391,
+    "lon": -86.310502,
+    "county": "Plymouth County",
+    "region": ""
+  },
+  "Richmond": {
+    "lat": 39.828148,
+    "lon": -84.895686,
+    "county": "Richmond County",
+    "region": ""
+  },
+  "Rising Sun": {
+    "lat": 38.950084,
+    "lon": -84.856561,
+    "county": "Rising Sun County",
+    "region": ""
+  },
+  "Rushville": {
+    "lat": 39.607846,
+    "lon": -85.444067,
+    "county": "Rushville County",
+    "region": ""
+  },
+  "Tipton": {
+    "lat": 40.281656,
+    "lon": -86.040734,
+    "county": "Tipton County",
+    "region": "Central"
+  },
+  "Tell City": {
+    "lat": 37.961778,
+    "lon": -86.750593,
+    "county": "Tell City County",
+    "region": ""
+  },
+  "Bloomfield": {
+    "lat": 39.02627,
+    "lon": -86.937899,
+    "county": "Bloomfield County",
+    "region": ""
+  },
+  "Wabash": {
+    "lat": 40.798336,
+    "lon": -85.821408,
+    "county": "Wabash County",
+    "region": ""
+  },
+  "Warsaw": {
+    "lat": 41.238597,
+    "lon": -85.857273,
+    "county": "Warsaw County",
+    "region": ""
+  },
+  "Huntington": {
+    "lat": 40.881106,
+    "lon": -85.493463,
+    "county": "Huntington County",
+    "region": "Northeast"
+  },
+  "New Albany": {
+    "lat": 38.284347,
+    "lon": -85.8249,
+    "county": "New Albany County",
+    "region": ""
+  },
+  "Scottsburg": {
+    "lat": 38.685286,
+    "lon": -85.769592,
+    "county": "Scottsburg County",
+    "region": ""
+  },
+  "Covington": {
+    "lat": 40.137062,
+    "lon": -87.3971,
+    "county": "Covington County",
+    "region": ""
+  },
+  "Frankfort": {
+    "lat": 40.280136,
+    "lon": -86.508923,
+    "county": "Frankfort County",
+    "region": ""
+  },
+  "Brownstown": {
+    "lat": 38.87845,
+    "lon": -86.041372,
+    "county": "Brownstown County",
+    "region": ""
+  },
+  "Brazil": {
+    "lat": 39.524505,
+    "lon": -87.119396,
+    "county": "Brazil County",
+    "region": ""
+  },
+  "Princeton": {
+    "lat": 38.355724,
+    "lon": -87.568071,
+    "county": "Princeton County",
+    "region": ""
+  },
+  "Corydon": {
+    "lat": 38.2044,
+    "lon": -86.123276,
+    "county": "Corydon County",
+    "region": ""
+  },
+  "Spencer": {
+    "lat": 39.285572,
+    "lon": -86.761875,
+    "county": "Spencer County",
+    "region": "Southwest"
+  },
+  "Greenfield": {
+    "lat": 39.784096,
+    "lon": -85.767908,
+    "county": "Greenfield County",
+    "region": ""
+  },
+  "LaGrange": {
+    "lat": 41.645144,
+    "lon": -85.419063,
+    "county": "LaGrange County",
+    "region": "North"
+  },
+  "Fort Wayne": {
+    "lat": 41.07892,
+    "lon": -85.137058,
+    "county": "Fort Wayne County",
+    "region": ""
+  },
+  "Valparaiso": {
+    "lat": 41.466504,
+    "lon": -87.062868,
+    "county": "Valparaiso County",
+    "region": ""
+  },
+  "Angola": {
+    "lat": 41.631996,
+    "lon": -84.998467,
+    "county": "Angola County",
+    "region": ""
+  },
+  "Rockville": {
+    "lat": 39.762054,
+    "lon": -87.228344,
+    "county": "Rockville County",
+    "region": ""
+  },
+  "Brookville": {
+    "lat": 39.425832,
+    "lon": -85.010104,
+    "county": "Brookville County",
+    "region": ""
+  },
+  "Danville": {
+    "lat": 39.761286,
+    "lon": -86.519812,
+    "county": "Danville County",
+    "region": ""
+  },
+  "Shoals": {
+    "lat": 38.665281,
+    "lon": -86.793076,
+    "county": "Shoals County",
+    "region": ""
+  },
+  "Vernon": {
+    "lat": 38.985719,
+    "lon": -85.607907,
+    "county": "Vernon County",
+    "region": ""
+  },
+  "Vevay": {
+    "lat": 38.747067,
+    "lon": -85.068968,
+    "county": "Vevay County",
+    "region": ""
+  },
+  "Paoli": {
+    "lat": 38.555711,
+    "lon": -86.466317,
+    "county": "Paoli County",
+    "region": ""
+  },
+  "Fowler": {
+    "lat": 40.617171,
+    "lon": -87.315713,
+    "county": "Fowler County",
+    "region": ""
+  },
+  "Kentland": {
+    "lat": 40.76961,
+    "lon": -87.444434,
+    "county": "Kentland County",
+    "region": ""
+  },
+  "Nashville": {
+    "lat": 39.208799,
+    "lon": -86.245583,
+    "county": "Nashville County",
+    "region": ""
+  },
+  "Indianapolis": {
+    "lat": 39.767919,
+    "lon": -86.153621,
+    "county": "Indianapolis County",
+    "region": ""
+  },
+  "Liberty": {
+    "lat": 39.635035,
+    "lon": -84.930296,
+    "county": "Liberty County",
+    "region": ""
+  },
+  "Versailles": {
+    "lat": 39.073037,
+    "lon": -85.251607,
+    "county": "Versailles County",
+    "region": ""
+  },
+  "English": {
+    "lat": 38.352803,
+    "lon": -86.446609,
+    "county": "English County",
+    "region": ""
+  },
+  "Mount Vernon": {
+    "lat": 37.93115,
+    "lon": -87.894319,
+    "county": "Mount Vernon County",
+    "region": ""
+  },
+  "Newport": {
+    "lat": 39.884803,
+    "lon": -87.409189,
+    "county": "Newport County",
+    "region": ""
+  }
+}
