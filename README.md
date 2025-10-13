@@ -81,9 +81,9 @@ python indiana_weather_monitor.py "Evansville"
 ## Temperature Thresholds
 
 - 🔴 **FREEZE** (≤32°F): Avoid these areas
-- 🟡 **FROST WARNING** (33-35°F): Exercise caution
-- 🟠 **COOL** (36-49°F): Manageable but chilly
-- 🟢 **COMFORTABLE** (≥50°F): Good RV weather
+- 🟫 **FROST WARNING** (33-40°F): Exercise caution
+- 🟩 **MILD** (40-60°F): Manageable but chilly
+- 🟢 **COMFORTABLE** (≥60°F): Good RV weather
 
 ## Understanding the Output
 

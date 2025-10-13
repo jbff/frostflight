@@ -801,9 +801,9 @@ class IndianaWeatherMonitor:
         elif temp <= FREEZE_THRESHOLD:
             return "🟦"  # Light blue square for freezing
         elif temp <= FROST_WARNING_THRESHOLD:
-            return "🟩"  # Green square for frost warning
+            return "🟫"  # Brown square for frost warning
         elif temp <= MILD_THRESHOLD:
-            return "🟫"  # Brown square for mild
+            return "🟩"  # Green square for mild
         elif temp <= WARM_THRESHOLD:
             return "🟨"  # Yellow square for warm
         elif temp <= HOT_THRESHOLD:
@@ -897,9 +897,9 @@ class IndianaWeatherMonitor:
         elif temp <= FREEZE_THRESHOLD:
             return "🟦"  # Light blue square for freeze (≤32°F)
         elif temp <= FROST_WARNING_THRESHOLD:
-            return "🟩"  # Green square for frost warning (≤40°F)
+            return "🟫"  # Brown square for frost warning (≤40°F)
         elif temp <= MILD_THRESHOLD:
-            return "🟫"  # Brown square for mild (40-60°F)
+            return "🟩"  # Green square for mild (40-60°F)
         elif temp <= WARM_THRESHOLD:
             return "🟨"  # Yellow square for warm (60-70°F)
         elif temp <= HOT_THRESHOLD:
@@ -917,8 +917,8 @@ class IndianaWeatherMonitor:
         print("TEMPERATURE LEGEND (Coldest temperature each county will reach in next 7 days):")
         print("🟪 Purple = Severe Freeze (≤20°F) - AVOID")
         print("🟦 Light Blue = Freeze (≤32°F) - AVOID") 
-        print("🟩 Green = Frost Warning (≤40°F) - CAUTION")
-        print("🟫 Brown = Mild (40-60°F) - WATCH")
+        print("🟫 Brown = Frost Warning (≤40°F) - CAUTION")
+        print("🟩 Green = Mild (40-60°F) - WATCH")
         print("🟨 Yellow = Warm (60-70°F) - GOOD")
         print("🟧 Orange = Hot (70-85°F) - COMFORTABLE")
         print("🟥 Red = Very Hot (>85°F) - HOT")
@@ -952,8 +952,8 @@ class IndianaWeatherMonitor:
         print("TEMPERATURE LEGEND (Today's high temperature for each county):")
         print("🟪 Purple = Severe Freeze (≤20°F) - AVOID")
         print("🟦 Light Blue = Freeze (≤32°F) - AVOID") 
-        print("🟩 Green = Frost Warning (≤40°F) - CAUTION")
-        print("🟫 Brown = Mild (40-60°F) - WATCH")
+        print("🟫 Brown = Frost Warning (≤40°F) - CAUTION")
+        print("🟩 Green = Mild (40-60°F) - WATCH")
         print("🟨 Yellow = Warm (60-70°F) - GOOD")
         print("🟧 Orange = Hot (70-85°F) - COMFORTABLE")
         print("🟥 Red = Very Hot (>85°F) - HOT")
