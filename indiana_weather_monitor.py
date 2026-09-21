@@ -89,7 +89,7 @@ INDIANA_CITIES = {
     "lat": 40.557644,
     "lon": -85.658192,
     "county": "Grant",
-    "region": ""
+    "region": "East Central"
   },
   "Winchester": {
     "lat": 40.172062,
@@ -137,133 +137,133 @@ INDIANA_CITIES = {
     "lat": 41.06547,
     "lon": -86.215113,
     "county": "Rochester",
-    "region": ""
+    "region": "North"
   },
   "La Porte": {
     "lat": 41.612116,
     "lon": -86.722873,
     "county": "La Porte",
-    "region": ""
+    "region": "Northwest"
   },
   "Albion": {
     "lat": 41.396074,
     "lon": -85.424633,
     "county": "Albion",
-    "region": ""
+    "region": "Northeast"
   },
   "Boonville": {
     "lat": 38.049512,
     "lon": -87.274983,
     "county": "Boonville",
-    "region": ""
+    "region": "Southwest"
   },
   "Anderson": {
     "lat": 40.107484,
     "lon": -85.67866,
     "county": "Anderson",
-    "region": ""
+    "region": "East Central"
   },
   "Winamac": {
     "lat": 41.050849,
     "lon": -86.603337,
     "county": "Winamac",
-    "region": ""
+    "region": "Northwest"
   },
   "Peru": {
     "lat": 40.754415,
     "lon": -86.06898,
     "county": "Peru",
-    "region": ""
+    "region": "North"
   },
   "Williamsport": {
     "lat": 40.287966,
     "lon": -87.293833,
     "county": "Williamsport",
-    "region": ""
+    "region": "West Central"
   },
   "Kokomo": {
     "lat": 40.488083,
     "lon": -86.130915,
     "county": "Kokomo",
-    "region": ""
+    "region": "Central"
   },
   "Decatur": {
     "lat": 40.828114,
     "lon": -84.925398,
     "county": "Decatur",
-    "region": ""
+    "region": "Northeast"
   },
   "Columbia City": {
     "lat": 41.157283,
     "lon": -85.490833,
     "county": "Columbia City",
-    "region": ""
+    "region": "Northeast"
   },
   "Crown Point": {
     "lat": 41.447993,
     "lon": -87.369939,
     "county": "Crown Point",
-    "region": ""
+    "region": "Northwest"
   },
   "Delphi": {
     "lat": 40.586365,
     "lon": -86.674796,
     "county": "Delphi",
-    "region": ""
+    "region": "West Central"
   },
   "Connersville": {
     "lat": 39.64082,
     "lon": -85.140563,
     "county": "Connersville",
-    "region": ""
+    "region": "East Central"
   },
   "Crawfordsville": {
     "lat": 40.064128,
     "lon": -86.912914,
     "county": "Crawfordsville",
-    "region": ""
+    "region": "West Central"
   },
   "Greensburg": {
     "lat": 39.337218,
     "lon": -85.483475,
     "county": "Greensburg",
-    "region": ""
+    "region": "Southeast"
   },
   "Goshen": {
     "lat": 41.587421,
     "lon": -85.838177,
     "county": "Goshen",
-    "region": ""
+    "region": "North"
   },
   "Greencastle": {
     "lat": 39.644373,
     "lon": -86.864968,
     "county": "Greencastle",
-    "region": ""
+    "region": "West Central"
   },
   "Hartford City": {
     "lat": 40.45175,
     "lon": -85.367962,
     "county": "Hartford City",
-    "region": ""
+    "region": "East Central"
   },
   "Monticello": {
     "lat": 40.745219,
     "lon": -86.7627,
     "county": "Monticello",
-    "region": ""
+    "region": "Northwest"
   },
   "Logansport": {
     "lat": 40.754712,
     "lon": -86.366868,
     "county": "Logansport",
-    "region": ""
+    "region": "North"
   },
   "Lawrenceburg": {
     "lat": 39.09131,
     "lon": -84.850352,
     "county": "Lawrenceburg",
-    "region": ""
+    "region": "Southeast"
   },
   "Knox": {
     "lat": 41.299536,
@@ -275,91 +275,91 @@ INDIANA_CITIES = {
     "lat": 40.417991,
     "lon": -86.894521,
     "county": "Lafayette",
-    "region": ""
+    "region": "West Central"
   },
   "Muncie": {
     "lat": 40.194241,
     "lon": -85.38731,
     "county": "Muncie",
-    "region": ""
+    "region": "East Central"
   },
   "Martinsville": {
     "lat": 39.425218,
     "lon": -86.428927,
     "county": "Martinsville",
-    "region": ""
+    "region": "South Central"
   },
   "Lebanon": {
     "lat": 40.048642,
     "lon": -86.468507,
     "county": "Lebanon",
-    "region": ""
+    "region": "Central"
   },
   "New Castle": {
     "lat": 39.930436,
     "lon": -85.371398,
     "county": "New Castle",
-    "region": ""
+    "region": "East Central"
   },
   "Portland": {
     "lat": 40.433888,
     "lon": -84.978766,
     "county": "Portland",
-    "region": ""
+    "region": "East Central"
   },
   "Salem": {
     "lat": 38.605672,
     "lon": -86.100769,
     "county": "Salem",
-    "region": ""
+    "region": "South Central"
   },
   "Rensselaer": {
     "lat": 40.935868,
     "lon": -87.150941,
     "county": "Rensselaer",
-    "region": ""
+    "region": "Northwest"
   },
   "Sullivan": {
     "lat": 39.094888,
     "lon": -87.407705,
     "county": "Sullivan",
-    "region": ""
+    "region": "Southwest"
   },
   "Shelbyville": {
     "lat": 39.521333,
     "lon": -85.778476,
     "county": "Shelbyville",
-    "region": ""
+    "region": "Southeast"
   },
   "South Bend": {
     "lat": 41.675147,
     "lon": -86.252761,
     "county": "South Bend",
-    "region": ""
+    "region": "North"
   },
   "Plymouth": {
     "lat": 41.34391,
     "lon": -86.310502,
     "county": "Plymouth",
-    "region": ""
+    "region": "North"
   },
   "Richmond": {
     "lat": 39.828148,
     "lon": -84.895686,
     "county": "Richmond",
-    "region": ""
+    "region": "East Central"
   },
   "Rising Sun": {
     "lat": 38.950084,
     "lon": -84.856561,
     "county": "Rising Sun",
-    "region": ""
+    "region": "Southeast"
   },
   "Rushville": {
     "lat": 39.607846,
     "lon": -85.444067,
     "county": "Rushville",
-    "region": ""
+    "region": "East Central"
   },
   "Tipton": {
     "lat": 40.281656,
@@ -371,25 +371,25 @@ INDIANA_CITIES = {
     "lat": 37.961778,
     "lon": -86.750593,
     "county": "Tell City",
-    "region": ""
+    "region": "Southwest"
   },
   "Bloomfield": {
     "lat": 39.02627,
     "lon": -86.937899,
     "county": "Bloomfield",
-    "region": ""
+    "region": "Southwest"
   },
   "Wabash": {
     "lat": 40.798336,
     "lon": -85.821408,
     "county": "Wabash",
-    "region": ""
+    "region": "Northeast"
   },
   "Warsaw": {
     "lat": 41.238597,
     "lon": -85.857273,
     "county": "Warsaw",
-    "region": ""
+    "region": "Northeast"
   },
   "Huntington": {
     "lat": 40.881106,
@@ -401,49 +401,49 @@ INDIANA_CITIES = {
     "lat": 38.284347,
     "lon": -85.8249,
     "county": "New Albany",
-    "region": ""
+    "region": "South Central"
   },
   "Scottsburg": {
     "lat": 38.685286,
     "lon": -85.769592,
     "county": "Scottsburg",
-    "region": ""
+    "region": "Southeast"
   },
   "Covington": {
     "lat": 40.137062,
     "lon": -87.3971,
     "county": "Covington",
-    "region": ""
+    "region": "West Central"
   },
   "Frankfort": {
     "lat": 40.280136,
     "lon": -86.508923,
     "county": "Frankfort",
-    "region": ""
+    "region": "Central"
   },
   "Brownstown": {
     "lat": 38.87845,
     "lon": -86.041372,
     "county": "Brownstown",
-    "region": ""
+    "region": "South Central"
   },
   "Brazil": {
     "lat": 39.524505,
     "lon": -87.119396,
     "county": "Brazil",
-    "region": ""
+    "region": "West Central"
   },
   "Princeton": {
     "lat": 38.355724,
     "lon": -87.568071,
     "county": "Princeton",
-    "region": ""
+    "region": "Southwest"
   },
   "Corydon": {
     "lat": 38.2044,
     "lon": -86.123276,
     "county": "Corydon",
-    "region": ""
+    "region": "South Central"
   },
   "Spencer": {
     "lat": 39.285572,
@@ -455,7 +455,7 @@ INDIANA_CITIES = {
     "lat": 39.784096,
     "lon": -85.767908,
     "county": "Greenfield",
-    "region": ""
+    "region": "East Central"
   },
   "LaGrange": {
     "lat": 41.645144,
@@ -467,115 +467,115 @@ INDIANA_CITIES = {
     "lat": 41.07892,
     "lon": -85.137058,
     "county": "Fort Wayne",
-    "region": ""
+    "region": "Northeast"
   },
   "Valparaiso": {
     "lat": 41.466504,
     "lon": -87.062868,
     "county": "Valparaiso",
-    "region": ""
+    "region": "Northwest"
   },
   "Angola": {
     "lat": 41.631996,
     "lon": -84.998467,
     "county": "Angola",
-    "region": ""
+    "region": "Northeast"
   },
   "Rockville": {
     "lat": 39.762054,
     "lon": -87.228344,
     "county": "Rockville",
-    "region": ""
+    "region": "West Central"
   },
   "Brookville": {
     "lat": 39.425832,
     "lon": -85.010104,
     "county": "Brookville",
-    "region": ""
+    "region": "Southeast"
   },
   "Danville": {
     "lat": 39.761286,
     "lon": -86.519812,
     "county": "Danville",
-    "region": ""
+    "region": "Central"
   },
   "Shoals": {
     "lat": 38.665281,
     "lon": -86.793076,
     "county": "Shoals",
-    "region": ""
+    "region": "South Central"
   },
   "Vernon": {
     "lat": 38.985719,
     "lon": -85.607907,
     "county": "Vernon",
-    "region": ""
+    "region": "Southeast"
   },
   "Vevay": {
     "lat": 38.747067,
     "lon": -85.068968,
     "county": "Vevay",
-    "region": ""
+    "region": "Southeast"
   },
   "Paoli": {
     "lat": 38.555711,
     "lon": -86.466317,
     "county": "Paoli",
-    "region": ""
+    "region": "South Central"
   },
   "Fowler": {
     "lat": 40.617171,
     "lon": -87.315713,
     "county": "Fowler",
-    "region": ""
+    "region": "Northwest"
   },
   "Kentland": {
     "lat": 40.76961,
     "lon": -87.444434,
     "county": "Kentland",
-    "region": ""
+    "region": "Northwest"
   },
   "Nashville": {
     "lat": 39.208799,
     "lon": -86.245583,
     "county": "Nashville",
-    "region": ""
+    "region": "South Central"
   },
   "Indianapolis": {
     "lat": 39.767919,
     "lon": -86.153621,
     "county": "Indianapolis",
-    "region": ""
+    "region": "Central"
   },
   "Liberty": {
     "lat": 39.635035,
     "lon": -84.930296,
     "county": "Liberty",
-    "region": ""
+    "region": "East Central"
   },
   "Versailles": {
     "lat": 39.073037,
     "lon": -85.251607,
     "county": "Versailles",
-    "region": ""
+    "region": "Southeast"
   },
   "English": {
     "lat": 38.352803,
     "lon": -86.446609,
     "county": "English",
-    "region": ""
+    "region": "Southwest"
   },
   "Mount Vernon": {
     "lat": 37.93115,
     "lon": -87.894319,
     "county": "Mount Vernon",
-    "region": ""
+    "region": "Southwest"
   },
   "Newport": {
     "lat": 39.884803,
     "lon": -87.409189,
     "county": "Newport",
-    "region": ""
+    "region": "West Central"
   }
 }
 

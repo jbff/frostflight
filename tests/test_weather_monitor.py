@@ -330,3 +330,36 @@ def test_city_view_reports_failure_when_retry_also_fails(tmp_path, monkeypatch, 
     monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
     m.display_city_weather("Jasper", {"lat": 38.39, "lon": -86.93}, "Southwest")
     assert "No data available" in capsys.readouterr().out
+
+
+ALLOWED_REGIONS = {
+    "North", "Northeast", "Northwest", "Central", "East Central",
+    "West Central", "South Central", "Southeast", "Southwest",
+}
+
+
+def test_every_city_has_a_region():
+    bad = sorted(
+        c for c, coords in iwm.INDIANA_CITIES.items()
+        if coords.get("region", "") not in ALLOWED_REGIONS
+    )
+    assert not bad, f"{len(bad)} cities with blank/unknown region: {bad}"
+
+
+def test_freezing_tables_have_regions(tmp_path, capsys, freeze_today):
+    m = make_monitor(tmp_path)
+    payload = make_payload(min_temp=25.0)
+    # make_payload pins its daily dates to 2026-09-21; re-pin to the date the
+    # freeze_today fixture serves, mirroring test_today_analysis_three_way_split.
+    payload["daily"]["time"] = ["2099-01-01", "2099-01-02"]
+    for city in ("Marion", "Peru"):     # Marion's region was blank at HEAD
+        m.weather_data[city] = payload
+    m.data_fetched = True
+    m.display_today_freezing_analysis()
+    out = capsys.readouterr().out
+    lines = [l for l in out.splitlines() if l.startswith("Marion")]
+    assert lines, "Marion missing from today's freezing table entirely"
+    # Table rows render as f"{city:<15} {region:<12} {min_temp:>7.1f}..." so the
+    # Region cell occupies columns 16-27; a blank region renders as whitespace.
+    region_cell = lines[0][16:28].strip()
+    assert region_cell in ALLOWED_REGIONS, f"Marion Region cell is {region_cell!r}"
