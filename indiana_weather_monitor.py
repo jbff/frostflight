@@ -799,38 +799,51 @@ class IndianaWeatherMonitor:
             return None
     
     def fetch_all_weather_data(self, force_refresh=False):
-        """Fetch weather data for all Indiana cities and cache it."""
+        """Fetch weather data for all Indiana cities and cache it.
+
+        Only marks data fetched / writes the cache when at least one
+        city fetch succeeded. A force refresh never destroys the
+        previous good data: fresh results are collected first and only
+        swapped in if the refetch produced anything.
+        """
         if self.data_fetched and not force_refresh:
             return
-        
+
         # Try to load from cache first (unless force refresh)
         if not force_refresh and self.is_cache_valid():
             if self.load_cache():
                 return
-        
-        # If force refresh, clear the cache
-        if force_refresh:
-            self.clear_cache()
-            self.data_fetched = False
-            self.weather_data = {}
-            
+
+        previous_data = self.weather_data if force_refresh else None
+
         print("🌡️  Fetching weather data for all Indiana cities...")
         print("This may take a moment...")
-        
-        # Use tqdm for progress bar with county names in the bar
+
+        fresh_data = {}
         pbar = tqdm(INDIANA_CITIES.items(), desc="Fetching weather data", unit="county")
         for city, coords in pbar:
             county_name = CITY_TO_COUNTY_MAPPING.get(city, "Unknown")
             pbar.set_description(f"Fetching {county_name} County")
             data = self.get_weather_data(city, coords)
-            if data:
-                self.weather_data[city] = data
+            if is_valid_payload(data):
+                fresh_data[city] = data
             else:
-                tqdm.write(f"  ❌ Failed to fetch data for {city} ({county_name} County)")
-        
+                tqdm.write(f"  ❌ Failed to fetch valid data for {city} ({county_name} County)")
+
+        if not fresh_data:
+            print("❌ Fetch failed for all cities - keeping existing data")
+            if previous_data:
+                # Offline force refresh: keep serving the last known-good data.
+                self.weather_data = previous_data
+                self.data_fetched = True
+            return
+
+        self.weather_data = fresh_data
         self.data_fetched = True
+        self.data_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.data_from_cache = False
         print("✅ Weather data fetch complete!")
-        
+
         # Save to cache
         self.save_cache()
         print()

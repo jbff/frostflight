@@ -70,3 +70,64 @@ def test_monitor_constructs_with_absolute_cache_path(tmp_path, monkeypatch):
     m = iwm.IndianaWeatherMonitor()
     assert m.cache_file.endswith("weather_cache.json")
     assert m.cache_file.startswith(os.path.dirname(iwm.__file__))
+
+
+def make_payload(min_temp=40.0):
+    """Minimal well-formed Open-Meteo payload."""
+    return {
+        "current_weather": {"temperature": 55.0, "windspeed": 5.0, "time": "2026-09-21T08:00"},
+        "daily": {
+            "temperature_2m_min": [min_temp, 38.0],
+            "temperature_2m_max": [70.0, 65.0],
+            "time": ["2026-09-21", "2026-09-22"],
+        },
+    }
+
+
+def test_failed_fetch_not_cached_or_marked_fetched(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
+    m.fetch_all_weather_data()
+    assert m.data_fetched is False
+    assert m.weather_data == {}
+    import os
+    assert not os.path.exists(m.cache_file)  # nothing cached from a total failure
+
+
+def test_partial_fetch_caches_successes_only(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    cities = list(iwm.INDIANA_CITIES)
+    good = make_payload()
+    def fake_get(city, coords):
+        return good if city == cities[0] else None
+    monkeypatch.setattr(m, "get_weather_data", fake_get)
+    m.fetch_all_weather_data()
+    assert m.data_fetched is True
+    assert list(m.weather_data.keys()) == [cities[0]]
+
+
+def test_force_refresh_offline_keeps_previous_good_data(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload()}
+    m.data_fetched = True
+    m.data_timestamp = "2026-09-20 08:00:00"
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
+    m.fetch_all_weather_data(force_refresh=True)
+    # last known-good data survives an offline force refresh
+    assert m.weather_data == {"Peru": m.weather_data["Peru"]}
+    assert m.data_fetched is True
+    assert m.data_timestamp == "2026-09-20 08:00:00"
+    import os
+    # and the old cache file is not overwritten with an empty dict
+    assert not os.path.exists(m.cache_file)
+
+
+def test_error_body_rejected_at_store_time(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    monkeypatch.setattr(
+        m, "get_weather_data",
+        lambda city, coords: {"error": True, "reason": "quota exceeded"},
+    )
+    m.fetch_all_weather_data()
+    assert m.weather_data == {}
+    assert m.data_fetched is False
