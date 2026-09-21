@@ -787,7 +787,8 @@ class IndianaWeatherMonitor:
             "current_weather": "true",
             "daily": "temperature_2m_max,temperature_2m_min",
             "timezone": self.timezone,
-            "temperature_unit": "fahrenheit"
+            "temperature_unit": "fahrenheit",
+            "windspeed_unit": "mph"
         }
         
         try:

@@ -131,3 +131,24 @@ def test_error_body_rejected_at_store_time(tmp_path, monkeypatch):
     m.fetch_all_weather_data()
     assert m.weather_data == {}
     assert m.data_fetched is False
+
+
+def test_get_weather_data_requests_mph(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return make_payload()
+
+    def fake_get(url, params=None, timeout=None):
+        captured["params"] = params
+        return FakeResponse()
+
+    monkeypatch.setattr(iwm.requests, "get", fake_get)
+    data = m.get_weather_data("Peru", {"lat": 40.75, "lon": -86.07})
+    assert data is not None
+    assert captured["params"]["windspeed_unit"] == "mph"
+    assert captured["params"]["temperature_unit"] == "fahrenheit"
