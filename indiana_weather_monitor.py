@@ -944,19 +944,23 @@ class IndianaWeatherMonitor:
         
         county_temps = {}
         
-        for city, data in self.weather_data.items():
-            if not data:
+        for city in INDIANA_CITIES:
+            data = self.weather_data.get(city)
+            if not is_valid_payload(data):
                 continue
-                
+
             # Use the correct county mapping instead of the incorrect one in INDIANA_CITIES
             county_name = CITY_TO_COUNTY_MAPPING.get(city, "Unknown")
             county_id = self.get_county_id_from_name(county_name)
-            
+
             if county_id == -1:
                 continue  # County not found in mapping
-            
-            # Get the minimum temperature for the next 7 days
-            min_temps = data["daily"]["temperature_2m_min"]
+
+            # Coldest of the numeric daily minimums (nulls skipped)
+            min_temps = [t for t in data["daily"]["temperature_2m_min"]
+                         if isinstance(t, (int, float))]
+            if not min_temps:
+                continue
             coldest_temp = min(min_temps)
             
             county_temps[county_id] = {
@@ -1174,22 +1178,30 @@ class IndianaWeatherMonitor:
         freezing_this_week = []
         no_freezing_this_week = []
         
-        for city, data in self.weather_data.items():
-            if not data:
+        for city, coords in INDIANA_CITIES.items():
+            data = self.weather_data.get(city)
+            if not is_valid_payload(data):
                 continue
-                
-            min_temps = data["daily"]["temperature_2m_min"]
-            region = INDIANA_CITIES[city]["region"]
-            
+
+            min_temps = [t for t in data["daily"]["temperature_2m_min"]
+                         if isinstance(t, (int, float))]
+            max_temps = [t for t in data["daily"]["temperature_2m_max"]
+                         if isinstance(t, (int, float))]
+            dates = data["daily"]["time"]
+            if not min_temps or len(dates) < len(min_temps):
+                continue
+
+            region = coords["region"]
+
             # Check if any day in the next 7 days has freezing temps
             has_freezing = any(temp <= FREEZE_THRESHOLD for temp in min_temps)
-            
+
             city_info = {
                 "city": city,
                 "region": region,
                 "min_temps": min_temps,
-                "max_temps": data["daily"]["temperature_2m_max"],
-                "dates": data["daily"]["time"]
+                "max_temps": max_temps,
+                "dates": dates
             }
             
             if has_freezing:
@@ -1250,8 +1262,8 @@ class IndianaWeatherMonitor:
             print("-" * 80)
             for city_info in freezing_this_week:
                 freeze_days = []
-                for i, (date, min_temp) in enumerate(zip(city_info['dates'], city_info['min_temps'])):
-                    if min_temp <= FREEZE_THRESHOLD:
+                for date, min_temp in zip(city_info['dates'], city_info['min_temps']):
+                    if isinstance(min_temp, (int, float)) and min_temp <= FREEZE_THRESHOLD:
                         display_date = date.split('T')[0] if 'T' in date else date
                         freeze_days.append(f"{display_date}({min_temp:.1f}°F)")
                 
@@ -1284,19 +1296,30 @@ class IndianaWeatherMonitor:
             self.fetch_all_weather_data()
         
         data = self.weather_data.get(city)
-        if not data:
-            print(f"❌ No data available for {city}")
-            return
-        
+        if not is_valid_payload(data):
+            # Bulk fetch may have missed this city - retry it live once
+            # instead of showing "no data" until the next full refresh.
+            print(f"🔄 {city} missing from fetched data - retrying live...")
+            data = self.get_weather_data(city, coords)
+            if is_valid_payload(data):
+                self.weather_data[city] = data
+            else:
+                print(f"❌ No data available for {city}")
+                return
+
         # Current weather
-        current = data["current_weather"]
-        current_temp = current["temperature"]
+        current = data.get("current_weather") or {}
+        current_temp = current.get("temperature")
+        if not isinstance(current_temp, (int, float)):
+            print(f"❌ Malformed current-weather data for {city}")
+            return
         current_color = self.get_temperature_color(current_temp)
-        current_emoji = self.get_weather_emoji(current_temp)
-        
-        print(f"Current Temperature: {current_color} {current_temp:.1f}°F {current_emoji}")
-        print(f"Wind: {current['windspeed']:.1f} mph")
-        print(f"Last Updated: {current['time']}")
+        windspeed = current.get("windspeed")
+
+        print(f"Current Temperature: {current_color} {current_temp:.1f}°F {self.get_weather_emoji(current_temp)}")
+        if isinstance(windspeed, (int, float)):
+            print(f"Wind: {windspeed:.1f} mph")
+        print(f"Last Updated: {current.get('time', 'Unknown')}")
         
         # 7-day forecast
         daily = data["daily"]

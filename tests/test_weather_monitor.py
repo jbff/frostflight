@@ -273,3 +273,60 @@ def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
     out = capsys.readouterr().out
     assert "2026-09-21 03:00:00" in out
     assert "(cached)" in out
+
+
+def test_today_analysis_survives_unknown_cache_keys(tmp_path, capsys):
+    m = make_monitor(tmp_path)
+    # Cache written by the old 13-city build: contains "Gary", missing from INDIANA_CITIES
+    m.weather_data = {
+        "Gary": {"daily": {"temperature_2m_min": [10.0], "temperature_2m_max": [20.0], "time": ["2026-09-21"]}},
+        "Peru": {"daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": ["2026-09-21"]}},
+    }
+    m.data_fetched = True
+    freezing, frost, above = m.analyze_today_freezing()   # used to raise KeyError: 'Gary'
+    assert [c["city"] for c in freezing] == ["Peru"]
+
+
+def test_week_analysis_survives_unknown_cache_keys(tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {
+        "Gary": {"daily": {"temperature_2m_min": [10.0] * 7, "temperature_2m_max": [20.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
+        "Peru": {"daily": {"temperature_2m_min": [25.0] * 7, "temperature_2m_max": [40.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
+    }
+    m.data_fetched = True
+    freezing, no_freezing = m.analyze_week_freezing()     # used to raise KeyError at 1058
+    assert [c["city"] for c in freezing] == ["Peru"]
+
+
+def test_null_daily_value_skips_one_city_not_whole_view(tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {
+        "Broken": {"daily": {"temperature_2m_min": [None, 45.0], "temperature_2m_max": [60.0, 60.0], "time": ["2026-09-21", "2026-09-22"]}},
+        "Peru": {"daily": {"temperature_2m_min": [25.0, 30.0], "temperature_2m_max": [40.0, 40.0], "time": ["2026-09-21", "2026-09-22"]}},
+    }
+    m.data_fetched = True
+    # coldest-temp mapping must skip Broken (min over nulls used to raise TypeError)
+    result = m.get_county_temperature_data()
+    assert "Broken" not in [v["city"] for v in result.values()]
+    assert any(v["city"] == "Peru" for v in result.values())
+
+
+def test_city_view_retries_live_when_prefetch_missed(tmp_path, monkeypatch, capsys):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}          # Jasper failed during the bulk fetch
+    m.data_fetched = True
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: make_payload(min_temp=28.0))
+    m.display_city_weather("Jasper", {"lat": 38.39, "lon": -86.93}, "Southwest")
+    out = capsys.readouterr().out
+    assert "No data available" not in out
+    assert "FREEZE" in out or "FROST WARNING" in out
+    assert m.weather_data.get("Jasper") is not None   # live result cached in memory
+
+
+def test_city_view_reports_failure_when_retry_also_fails(tmp_path, monkeypatch, capsys):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}
+    m.data_fetched = True
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
+    m.display_city_weather("Jasper", {"lat": 38.39, "lon": -86.93}, "Southwest")
+    assert "No data available" in capsys.readouterr().out
