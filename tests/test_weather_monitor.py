@@ -3,7 +3,7 @@
 import json
 import os
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import indiana_weather_monitor as iwm
 
@@ -217,14 +217,18 @@ def test_get_daily_value_guards():
     assert iwm.get_daily_value({"error": True}, "temperature_2m_min", 0) is None
 
 
-def test_today_analysis_uses_current_date_not_cache_day0(tmp_path, monkeypatch):
+def test_today_analysis_uses_current_date_not_cache_day0(tmp_path):
     m = make_monitor(tmp_path)
-    # Cache was fetched "yesterday": daily[0] is Sep 20, but today is Sep 21.
+    # Cache was fetched "yesterday": daily[0] is yesterday's date, but
+    # analysis must key today by the real current date, not blind day 0.
+    now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
+    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
     m.weather_data = {"Peru": {
         "daily": {
             "temperature_2m_min": [28.0, 50.0],
             "temperature_2m_max": [45.0, 70.0],
-            "time": ["2026-09-20", "2026-09-21"],
+            "time": [yesterday, today],
         }
     }}
     m.data_fetched = True
