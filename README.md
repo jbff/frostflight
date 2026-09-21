@@ -33,7 +33,7 @@ uv run python indiana_weather_monitor.py
 
 This will start an interactive menu where you can:
 - View a state-wide temperature summary
-- Get detailed forecasts for specific counties
+- Get detailed forecasts for specific cities (county seats)
 - View all counties with detailed information
 
 ### Command Line Options
@@ -43,7 +43,7 @@ This will start an interactive menu where you can:
 uv run python indiana_weather_monitor.py summary
 ```
 
-**Detailed forecast for a specific county:**
+**Detailed forecast for a specific city (county seat):**
 ```bash
 uv run python indiana_weather_monitor.py "Indianapolis"
 uv run python indiana_weather_monitor.py "New Albany"
@@ -109,9 +109,9 @@ This app uses the [Open-Meteo API](https://open-meteo.com/), which provides:
 - The Open-Meteo API is generally very reliable
 - If you encounter errors, wait a few minutes and try again
 
-**County not found:**
-- Make sure you're using the exact county name
-- Check spelling and capitalization
+**City not found:**
+- The CLI matches county-seat **city names** (e.g. "Crown Point", "Indianapolis"), not county names like "Lake" or "Allen"
+- Run the app with no arguments for the interactive menu with the full city list
 
 ## Contributing
 
