@@ -690,6 +690,27 @@ def is_valid_payload(data) -> bool:
         for t in list(min_temps) + list(max_temps)
     )
 
+def get_temp_status(temp: float) -> str:
+    """Single source of truth for temperature status labels.
+
+    Used by the state summary, the per-city 7-day forecast, the
+    freezing analyses, and the map legends so one reading always gets
+    one label in every view.
+    """
+    if temp <= SEVERE_FREEZE_THRESHOLD:
+        return "SEVERE FREEZE"
+    if temp <= FREEZE_THRESHOLD:
+        return "FREEZE"
+    if temp <= FROST_WARNING_THRESHOLD:
+        return "FROST WARNING"
+    if temp <= MILD_THRESHOLD:
+        return "COOL"
+    if temp <= WARM_THRESHOLD:
+        return "WARM"
+    if temp <= HOT_THRESHOLD:
+        return "HOT"
+    return "VERY HOT"
+
 class IndianaWeatherMonitor:
     def __init__(self):
         self.api_url = "https://api.open-meteo.com/v1/forecast"
@@ -973,14 +994,14 @@ class IndianaWeatherMonitor:
         print(f"\n{'='*80}")
         print(f"🗺️  INDIANA FROST RISK MAP - Next 7 Days Coldest Temperatures")
         print(f"{'='*80}")
-        print("TEMPERATURE LEGEND (Coldest temperature each county will reach in next 7 days):")
-        print("🟪 Purple = Severe Freeze (≤20°F) - AVOID")
-        print("🟦 Light Blue = Freeze (≤32°F) - AVOID") 
-        print("🟫 Brown = Frost Warning (≤40°F) - CAUTION")
-        print("🟩 Green = Mild (40-60°F) - WATCH")
-        print("🟨 Yellow = Warm (60-70°F) - GOOD")
-        print("🟧 Orange = Hot (70-85°F) - COMFORTABLE")
-        print("🟥 Red = Very Hot (>85°F) - HOT")
+        print("TEMPERATURE LEGEND (coldest temperature each county will reach):")
+        print("🟪 Purple = SEVERE FREEZE (≤20°F) - AVOID")
+        print("🟦 Light Blue = FREEZE (≤32°F) - AVOID")
+        print("🟫 Brown = FROST WARNING (≤40°F) - CAUTION")
+        print("🟩 Green = COOL (40-60°F)")
+        print("🟨 Yellow = WARM (60-70°F)")
+        print("🟧 Orange = HOT (70-85°F)")
+        print("🟥 Red = VERY HOT (>85°F)")
         print(f"{'='*80}")
         
         # Display the map
@@ -1009,13 +1030,13 @@ class IndianaWeatherMonitor:
         print(f"🗺️  INDIANA TODAY'S HIGH TEMPERATURE MAP")
         print(f"{'='*80}")
         print("TEMPERATURE LEGEND (Today's high temperature for each county):")
-        print("🟪 Purple = Severe Freeze (≤20°F) - AVOID")
-        print("🟦 Light Blue = Freeze (≤32°F) - AVOID") 
-        print("🟫 Brown = Frost Warning (≤40°F) - CAUTION")
-        print("🟩 Green = Mild (40-60°F) - WATCH")
-        print("🟨 Yellow = Warm (60-70°F) - GOOD")
-        print("🟧 Orange = Hot (70-85°F) - COMFORTABLE")
-        print("🟥 Red = Very Hot (>85°F) - HOT")
+        print("🟪 Purple = SEVERE FREEZE (≤20°F) - AVOID")
+        print("🟦 Light Blue = FREEZE (≤32°F) - AVOID")
+        print("🟫 Brown = FROST WARNING (≤40°F) - CAUTION")
+        print("🟩 Green = COOL (40-60°F)")
+        print("🟨 Yellow = WARM (60-70°F)")
+        print("🟧 Orange = HOT (70-85°F)")
+        print("🟥 Red = VERY HOT (>85°F)")
         print(f"{'='*80}")
         
         # Display the map
@@ -1239,15 +1260,7 @@ class IndianaWeatherMonitor:
             # Format date (remove time part if present)
             display_date = date.split('T')[0] if 'T' in date else date
             
-            status = ""
-            if min_temp <= FREEZE_THRESHOLD:
-                status = "FREEZE"
-            elif min_temp <= FROST_WARNING_THRESHOLD:
-                status = "FROST WARNING"
-            elif min_temp >= MILD_THRESHOLD:
-                status = "WARM"
-            else:
-                status = "COOL"
+            status = get_temp_status(min_temp)
             
             print(f"{display_date:<12} {min_color}{min_temp:>5.1f}°F {max_color}{max_temp:>5.1f}°F {status:<15}")
         
@@ -1289,12 +1302,7 @@ class IndianaWeatherMonitor:
         print("-" * 60)
         
         for data in city_data:
-            status = "SEVERE FREEZE" if data["temp"] <= SEVERE_FREEZE_THRESHOLD else \
-                    "FREEZE" if data["temp"] <= FREEZE_THRESHOLD else \
-                    "FROST WARNING" if data["temp"] <= FROST_WARNING_THRESHOLD else \
-                    "MILD" if data["temp"] <= MILD_THRESHOLD else \
-                    "WARM" if data["temp"] <= WARM_THRESHOLD else \
-                    "HOT" if data["temp"] <= HOT_THRESHOLD else "VERY HOT"
+            status = get_temp_status(data["temp"])
             
             print(f"{data['city']:<15} {data['region']:<12} {data['color']}{data['temp']:>5.1f}°F {data['emoji']} {status:<15}")
     

@@ -2,6 +2,7 @@
 
 import json
 import os
+import pytest
 
 import indiana_weather_monitor as iwm
 
@@ -152,3 +153,49 @@ def test_get_weather_data_requests_mph(tmp_path, monkeypatch):
     assert data is not None
     assert captured["params"]["windspeed_unit"] == "mph"
     assert captured["params"]["temperature_unit"] == "fahrenheit"
+
+
+@pytest.mark.parametrize("temp,expected", [
+    (15, "SEVERE FREEZE"), (20, "SEVERE FREEZE"),
+    (32, "FREEZE"), (33, "FROST WARNING"), (40, "FROST WARNING"),
+    (41, "COOL"), (60, "COOL"),
+    (61, "WARM"), (70, "WARM"),
+    (71, "HOT"), (85, "HOT"),
+    (86, "VERY HOT"), (92, "VERY HOT"),
+])
+def test_get_temp_status_boundaries(temp, expected):
+    assert iwm.get_temp_status(temp) == expected
+
+
+def test_no_legend_only_words():
+    # The map legends must no longer promise WATCH/GOOD/COMFORTABLE
+    import inspect
+    src = inspect.getsource(iwm)
+    assert "WATCH" not in src
+    assert '"GOOD"' not in src and "GOOD" not in src.replace("Good choice", "")
+    assert "COMFORTABLE" not in src
+
+
+def test_state_summary_status_matches_shared_function(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    payload = make_payload(min_temp=92.0)
+    # The state summary statuses the CURRENT temp, which make_payload
+    # hardcodes to 55.0; pin it to 92 so the hot branch is exercised.
+    payload["current_weather"]["temperature"] = 92.0
+    m.weather_data = {"Peru": payload}
+    m.data_fetched = True
+    m.data_timestamp = "2026-09-21 09:00:00"
+    m.display_state_summary()
+    out = capsys.readouterr().out
+    assert "VERY HOT" in out          # not "WARM"
+    assert "WARM\n" not in out
+
+
+def test_per_city_forecast_hot_label(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload(min_temp=92.0)}
+    m.data_fetched = True
+    m.display_city_weather("Peru", {"lat": 40.75, "lon": -86.07}, "North")
+    out = capsys.readouterr().out
+    assert "VERY HOT" in out
+    assert "WARM" not in out
