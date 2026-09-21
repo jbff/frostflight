@@ -54,7 +54,7 @@ uv run python indiana_weather_monitor.py "New Albany"
 - 🟪 **SEVERE FREEZE** (≤20°F): Avoid these areas
 - 🟦 **FREEZE** (≤32°F): Avoid these areas
 - 🟫 **FROST WARNING** (≤40°F): Exercise caution
-- 🟩 **MILD** (40-60°F): Manageable but chilly
+- 🟩 **COOL** (40-60°F): Manageable but chilly
 - 🟨 **WARM** (60-70°F): Good RV weather
 - 🟧 **HOT** (70-85°F): Comfortable
 - 🟥 **VERY HOT** (>85°F): Hot conditions

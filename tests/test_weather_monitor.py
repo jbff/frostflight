@@ -58,7 +58,7 @@ def test_load_cache_accepts_good_cache_and_stamps_it(tmp_path):
     m = make_monitor(tmp_path)
     write_cache(m.cache_file, {
         "timestamp": "2026-09-20 08:00:00",
-        "weather_data": {"Peru": {"daily": {"temperature_2m_min": [40.0], "temperature_2m_max": [60.0], "time": ["2026-09-20"]}}},
+        "weather_data": {"Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [40.0], "temperature_2m_max": [60.0], "time": ["2026-09-20"]}}},
     })
     assert m.load_cache() is True
     assert m.data_fetched is True
@@ -217,6 +217,24 @@ def test_get_daily_value_guards():
     assert iwm.get_daily_value({"error": True}, "temperature_2m_min", 0) is None
 
 
+def test_is_valid_payload_gate_rejects_bools_and_missing_current_weather():
+    payload = make_payload()
+    assert iwm.is_valid_payload(payload) is True
+
+    no_current = {"daily": payload["daily"]}
+    assert iwm.is_valid_payload(no_current) is False           # older-build cache
+    assert iwm.is_valid_payload(
+        {"current_weather": {"windspeed": 5.0}, "daily": payload["daily"]}) is False
+    assert iwm.is_valid_payload(
+        {"current_weather": {"temperature": "55"}, "daily": payload["daily"]}) is False
+
+    bools = make_payload()
+    bools["daily"]["temperature_2m_min"][0] = True
+    assert iwm.is_valid_payload(bools) is False                # bool is not a temperature
+    assert iwm.get_daily_value(
+        {"daily": {"temperature_2m_min": [True]}}, "temperature_2m_min", 0) is None
+
+
 def test_today_analysis_uses_current_date_not_cache_day0(tmp_path):
     m = make_monitor(tmp_path)
     # Cache was fetched "yesterday": daily[0] is yesterday's date, but
@@ -225,6 +243,7 @@ def test_today_analysis_uses_current_date_not_cache_day0(tmp_path):
     today = now.strftime("%Y-%m-%d")
     yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
     m.weather_data = {"Peru": {
+        "current_weather": {"temperature": 55.0},
         "daily": {
             "temperature_2m_min": [28.0, 50.0],
             "temperature_2m_max": [45.0, 70.0],
@@ -252,9 +271,9 @@ def test_today_analysis_three_way_split(tmp_path, freeze_today):
     # Real INDIANA_CITIES names: analyze iterates INDIANA_CITIES, so fake
     # keys like "A"/"B"/"C" would never be visited.
     m.weather_data = {
-        "Peru": {"daily": {"temperature_2m_min": [20.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
-        "Muncie": {"daily": {"temperature_2m_min": [35.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
-        "Evansville": {"daily": {"temperature_2m_min": [50.0], "temperature_2m_max": [70.0], "time": ["2099-01-01"]}},
+        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [20.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
+        "Muncie": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [35.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
+        "Evansville": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [50.0], "temperature_2m_max": [70.0], "time": ["2099-01-01"]}},
     }
     m.data_fetched = True
     freezing, frost, above = m.analyze_today_freezing()
@@ -275,12 +294,26 @@ def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
     assert "(cached)" in out
 
 
+def test_state_summary_skips_city_without_current_weather(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    # Stale older-build payload: well-formed daily arrays, no current_weather
+    m.weather_data = {
+        "Muncie": {"daily": {"temperature_2m_min": [30.0], "temperature_2m_max": [45.0], "time": ["2026-09-21"]}},
+        "Peru": make_payload(),
+    }
+    m.data_fetched = True
+    m.display_state_summary()   # used to raise KeyError: 'current_weather'
+    out = capsys.readouterr().out
+    assert "Peru" in out        # the other city still renders
+    assert not any(l.startswith("Muncie") for l in out.splitlines())
+
+
 def test_today_analysis_survives_unknown_cache_keys(tmp_path, capsys):
     m = make_monitor(tmp_path)
     # Cache written by the old 13-city build: contains "Gary", missing from INDIANA_CITIES
     m.weather_data = {
-        "Gary": {"daily": {"temperature_2m_min": [10.0], "temperature_2m_max": [20.0], "time": ["2026-09-21"]}},
-        "Peru": {"daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": ["2026-09-21"]}},
+        "Gary": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [10.0], "temperature_2m_max": [20.0], "time": ["2026-09-21"]}},
+        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": ["2026-09-21"]}},
     }
     m.data_fetched = True
     freezing, frost, above = m.analyze_today_freezing()   # used to raise KeyError: 'Gary'
@@ -290,8 +323,8 @@ def test_today_analysis_survives_unknown_cache_keys(tmp_path, capsys):
 def test_week_analysis_survives_unknown_cache_keys(tmp_path):
     m = make_monitor(tmp_path)
     m.weather_data = {
-        "Gary": {"daily": {"temperature_2m_min": [10.0] * 7, "temperature_2m_max": [20.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
-        "Peru": {"daily": {"temperature_2m_min": [25.0] * 7, "temperature_2m_max": [40.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
+        "Gary": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [10.0] * 7, "temperature_2m_max": [20.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
+        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [25.0] * 7, "temperature_2m_max": [40.0] * 7, "time": ["2026-09-2%d" % d for d in range(1, 8)]}},
     }
     m.data_fetched = True
     freezing, no_freezing = m.analyze_week_freezing()     # used to raise KeyError at 1058
@@ -301,8 +334,8 @@ def test_week_analysis_survives_unknown_cache_keys(tmp_path):
 def test_null_daily_value_skips_one_city_not_whole_view(tmp_path):
     m = make_monitor(tmp_path)
     m.weather_data = {
-        "Broken": {"daily": {"temperature_2m_min": [None, 45.0], "temperature_2m_max": [60.0, 60.0], "time": ["2026-09-21", "2026-09-22"]}},
-        "Peru": {"daily": {"temperature_2m_min": [25.0, 30.0], "temperature_2m_max": [40.0, 40.0], "time": ["2026-09-21", "2026-09-22"]}},
+        "Broken": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [None, 45.0], "temperature_2m_max": [60.0, 60.0], "time": ["2026-09-21", "2026-09-22"]}},
+        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [25.0, 30.0], "temperature_2m_max": [40.0, 40.0], "time": ["2026-09-21", "2026-09-22"]}},
     }
     m.data_fetched = True
     # coldest-temp mapping must skip Broken (min over nulls used to raise TypeError)

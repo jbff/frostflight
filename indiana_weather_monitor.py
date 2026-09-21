@@ -674,8 +674,13 @@ def is_valid_payload(data) -> bool:
     """Check an API/cache city payload is a well-formed forecast.
 
     Rejects None, JSON arrays, Open-Meteo 200-with-error bodies
-    ({"error": true, "reason": ...}), and payloads whose daily arrays
-    are missing, empty, or contain null values.
+    ({"error": true, "reason": ...}), payloads whose daily arrays
+    are missing, empty, or contain null or boolean values, and
+    payloads whose current_weather is not a dict holding a numeric
+    temperature (older-build caches). Rejection is per city: every
+    consumer (load_cache, the bulk fetch, the analysis and display
+    loops) skips a rejected city instead of discarding the whole
+    cache or view.
     """
     daily = data.get("daily") if isinstance(data, dict) else None
     if not isinstance(daily, dict):
@@ -685,10 +690,16 @@ def is_valid_payload(data) -> bool:
     times = daily.get("time")
     if not all(isinstance(a, list) and a for a in (min_temps, max_temps, times)):
         return False
-    return all(
-        isinstance(t, (int, float))
+    if not all(
+        isinstance(t, (int, float)) and not isinstance(t, bool)
         for t in list(min_temps) + list(max_temps)
-    )
+    ):
+        return False
+    current = data.get("current_weather")
+    if not isinstance(current, dict):
+        return False
+    temperature = current.get("temperature")
+    return isinstance(temperature, (int, float)) and not isinstance(temperature, bool)
 
 def get_temp_status(temp: float) -> str:
     """Single source of truth for temperature status labels.
@@ -734,7 +745,7 @@ def get_daily_value(data, field: str, index: int):
         value = data["daily"][field][index]
     except (KeyError, TypeError, IndexError):
         return None
-    return value if isinstance(value, (int, float)) else None
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
 class IndianaWeatherMonitor:
@@ -1360,7 +1371,11 @@ class IndianaWeatherMonitor:
         for city, coords in INDIANA_CITIES.items():
             data = self.weather_data.get(city)
             if data:
-                current_temp = data["current_weather"]["temperature"]
+                current = data.get("current_weather") or {}
+                current_temp = current.get("temperature")
+                if not isinstance(current_temp, (int, float)):
+                    print(f"❌ Malformed current-weather data for {city}")
+                    continue
                 region = coords["region"]
                 color = self.get_temperature_color(current_temp)
                 emoji = self.get_weather_emoji(current_temp)
