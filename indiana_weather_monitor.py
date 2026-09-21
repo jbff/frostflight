@@ -670,14 +670,38 @@ MILD_THRESHOLD = 60  # Fahrenheit - Mild conditions
 WARM_THRESHOLD = 70  # Fahrenheit - Warm conditions
 HOT_THRESHOLD = 85  # Fahrenheit - Hot conditions
 
+def is_valid_payload(data) -> bool:
+    """Check an API/cache city payload is a well-formed forecast.
+
+    Rejects None, JSON arrays, Open-Meteo 200-with-error bodies
+    ({"error": true, "reason": ...}), and payloads whose daily arrays
+    are missing, empty, or contain null values.
+    """
+    daily = data.get("daily") if isinstance(data, dict) else None
+    if not isinstance(daily, dict):
+        return False
+    min_temps = daily.get("temperature_2m_min")
+    max_temps = daily.get("temperature_2m_max")
+    times = daily.get("time")
+    if not all(isinstance(a, list) and a for a in (min_temps, max_temps, times)):
+        return False
+    return all(
+        isinstance(t, (int, float))
+        for t in list(min_temps) + list(max_temps)
+    )
+
 class IndianaWeatherMonitor:
     def __init__(self):
         self.api_url = "https://api.open-meteo.com/v1/forecast"
         self.timezone = "America/Indiana/Indianapolis"
         self.weather_data = {}  # Cache for weather data
         self.data_fetched = False
-        self.cache_file = "weather_cache.json"
+        self.cache_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "weather_cache.json"
+        )
         self.cache_max_age_hours = 6  # Cache expires after 6 hours
+        self.data_timestamp = None    # When the data was actually fetched
+        self.data_from_cache = False  # True if current data came from cache
         
     def is_cache_valid(self) -> bool:
         """Check if cache file exists and is not too old."""
@@ -695,18 +719,39 @@ class IndianaWeatherMonitor:
             return False
     
     def load_cache(self) -> bool:
-        """Load weather data from cache file."""
+        """Load weather data from cache file.
+
+        Returns True only when the cache holds a non-empty dict of
+        well-formed city payloads; any other content (or an unreadable
+        file) returns False so the caller falls back to a live fetch.
+        """
         try:
             with open(self.cache_file, 'r') as f:
                 cache_data = json.load(f)
-            
-            self.weather_data = cache_data.get('weather_data', {})
+
+            weather_data = cache_data.get('weather_data')
+            if not isinstance(weather_data, dict) or not weather_data:
+                print("❌ Cache contains no usable weather data")
+                return False
+
+            valid_data = {
+                city: data for city, data in weather_data.items()
+                if is_valid_payload(data)
+            }
+            if not valid_data:
+                print("❌ Cache contains no valid city data")
+                return False
+
+            self.weather_data = valid_data
             self.data_fetched = True
-            
-            cache_timestamp = cache_data.get('timestamp', 'Unknown')
-            print(f"📁 Loaded weather data from cache (cached at {cache_timestamp})")
+            self.data_timestamp = cache_data.get('timestamp', 'Unknown')
+            self.data_from_cache = True
+
+            print(f"📁 Loaded weather data from cache (cached at {self.data_timestamp})")
             return True
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        except (OSError, ValueError, KeyError, AttributeError) as e:
+            # OSError covers FileNotFoundError/PermissionError/IsADirectoryError;
+            # ValueError covers json.JSONDecodeError and UnicodeDecodeError.
             print(f"❌ Failed to load cache: {e}")
             return False
     
