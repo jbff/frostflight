@@ -3,6 +3,7 @@
 import json
 import os
 import pytest
+from datetime import datetime
 
 import indiana_weather_monitor as iwm
 
@@ -199,3 +200,72 @@ def test_per_city_forecast_hot_label(capsys, tmp_path):
     out = capsys.readouterr().out
     assert "VERY HOT" in out
     assert "WARM" not in out
+
+
+def test_get_today_index():
+    daily = {"time": ["2026-09-20", "2026-09-21", "2026-09-22"]}
+    assert iwm.get_today_index(daily, "2026-09-21") == 1
+    assert iwm.get_today_index(daily, "2026-09-25") == -1
+    assert iwm.get_today_index({}, "2026-09-21") == -1
+
+
+def test_get_daily_value_guards():
+    data = {"daily": {"temperature_2m_min": [None, 45.2]}}
+    assert iwm.get_daily_value(data, "temperature_2m_min", 1) == 45.2
+    assert iwm.get_daily_value(data, "temperature_2m_min", 0) is None   # null skipped
+    assert iwm.get_daily_value(data, "temperature_2m_min", 9) is None   # out of range
+    assert iwm.get_daily_value({"error": True}, "temperature_2m_min", 0) is None
+
+
+def test_today_analysis_uses_current_date_not_cache_day0(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    # Cache was fetched "yesterday": daily[0] is Sep 20, but today is Sep 21.
+    m.weather_data = {"Peru": {
+        "daily": {
+            "temperature_2m_min": [28.0, 50.0],
+            "temperature_2m_max": [45.0, 70.0],
+            "time": ["2026-09-20", "2026-09-21"],
+        }
+    }}
+    m.data_fetched = True
+    freezing, frost, above = m.analyze_today_freezing()
+    # 28F was YESTERDAY's min; today's min is 50F -> must NOT be in freezing list
+    assert freezing == [] and frost == []
+    assert [c["city"] for c in above] == ["Peru"]
+
+
+@pytest.fixture
+def freeze_today(monkeypatch):
+    class FakeDT(datetime):
+        @classmethod
+        def now(cls):
+            return datetime(2099, 1, 1)
+    monkeypatch.setattr(iwm, "datetime", FakeDT)
+
+
+def test_today_analysis_three_way_split(tmp_path, freeze_today):
+    m = make_monitor(tmp_path)
+    # Real INDIANA_CITIES names: analyze iterates INDIANA_CITIES, so fake
+    # keys like "A"/"B"/"C" would never be visited.
+    m.weather_data = {
+        "Peru": {"daily": {"temperature_2m_min": [20.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
+        "Muncie": {"daily": {"temperature_2m_min": [35.0], "temperature_2m_max": [40.0], "time": ["2099-01-01"]}},
+        "Evansville": {"daily": {"temperature_2m_min": [50.0], "temperature_2m_max": [70.0], "time": ["2099-01-01"]}},
+    }
+    m.data_fetched = True
+    freezing, frost, above = m.analyze_today_freezing()
+    assert [c["city"] for c in freezing] == ["Peru"]
+    assert [c["city"] for c in frost] == ["Muncie"]     # 35F = FROST WARNING bucket, not "MILD"
+    assert [c["city"] for c in above] == ["Evansville"]
+
+
+def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload()}
+    m.data_fetched = True
+    m.data_timestamp = "2026-09-21 03:00:00"
+    m.data_from_cache = True
+    m.display_state_summary()
+    out = capsys.readouterr().out
+    assert "2026-09-21 03:00:00" in out
+    assert "(cached)" in out

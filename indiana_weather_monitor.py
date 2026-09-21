@@ -711,6 +711,32 @@ def get_temp_status(temp: float) -> str:
         return "HOT"
     return "VERY HOT"
 
+
+def get_today_index(daily: Dict, today: str) -> int:
+    """Index of today's date inside a forecast's daily time array, or -1."""
+    times = daily.get("time") if isinstance(daily, dict) else None
+    if not isinstance(times, list):
+        return -1
+    try:
+        return times.index(today)
+    except ValueError:
+        return -1
+
+
+def get_daily_value(data, field: str, index: int):
+    """Safely extract one numeric value from a city's daily arrays.
+
+    Returns None for missing fields, out-of-range indices, and null
+    values instead of raising - one malformed county must not abort
+    an entire view.
+    """
+    try:
+        value = data["daily"][field][index]
+    except (KeyError, TypeError, IndexError):
+        return None
+    return value if isinstance(value, (int, float)) else None
+
+
 class IndianaWeatherMonitor:
     def __init__(self):
         self.api_url = "https://api.open-meteo.com/v1/forecast"
@@ -959,8 +985,14 @@ class IndianaWeatherMonitor:
             if county_id == -1:
                 continue  # County not found in mapping
             
-            # Get today's maximum temperature (first day in forecast)
-            today_max_temp = data["daily"]["temperature_2m_max"][0]
+            # Get today's maximum temperature by today's date, not blind day 0
+            daily = data["daily"]
+            idx = get_today_index(daily, datetime.now().strftime('%Y-%m-%d'))
+            if idx == -1:
+                continue  # cached data predates today - skip
+            today_max_temp = get_daily_value(data, "temperature_2m_max", idx)
+            if today_max_temp is None:
+                continue
             
             county_temps[county_id] = {
                 "county_name": county_name,
@@ -1093,34 +1125,46 @@ class IndianaWeatherMonitor:
             return f"🟡 Moderate: {city} - Cool but manageable"
     
     def analyze_today_freezing(self):
-        """Analyze which regions have freezing temperatures today vs above freezing."""
+        """Analyze which regions have freezing temperatures today vs above freezing.
+
+        Uses the index of today's date inside each city's daily array, so a
+        cache fetched yesterday is never presented as today's data.
+        """
         if not self.data_fetched:
             self.fetch_all_weather_data()
-        
+
+        today = datetime.now().strftime('%Y-%m-%d')
         freezing_today = []
+        frost_warning_today = []
         above_freezing_today = []
-        
-        for city, data in self.weather_data.items():
-            if not data:
+
+        for city, coords in INDIANA_CITIES.items():
+            data = self.weather_data.get(city)
+            if not is_valid_payload(data):
                 continue
-                
-            # Get today's minimum temperature (first day in forecast)
-            today_min_temp = data["daily"]["temperature_2m_min"][0]
-            region = INDIANA_CITIES[city]["region"]
-            
+            idx = get_today_index(data["daily"], today)
+            if idx == -1:
+                continue  # cache predates today - don't show day 0 as "today"
+            today_min_temp = get_daily_value(data, "temperature_2m_min", idx)
+            today_max_temp = get_daily_value(data, "temperature_2m_max", idx)
+            if today_min_temp is None or today_max_temp is None:
+                continue
+
             city_info = {
                 "city": city,
-                "region": region,
+                "region": coords["region"],
                 "min_temp": today_min_temp,
-                "max_temp": data["daily"]["temperature_2m_max"][0]
+                "max_temp": today_max_temp
             }
-            
+
             if today_min_temp <= FREEZE_THRESHOLD:
                 freezing_today.append(city_info)
+            elif today_min_temp <= FROST_WARNING_THRESHOLD:
+                frost_warning_today.append(city_info)
             else:
                 above_freezing_today.append(city_info)
-        
-        return freezing_today, above_freezing_today
+
+        return freezing_today, frost_warning_today, above_freezing_today
     
     def analyze_week_freezing(self):
         """Analyze which regions have freezing temperatures in the next week."""
@@ -1157,7 +1201,7 @@ class IndianaWeatherMonitor:
     
     def display_today_freezing_analysis(self):
         """Display analysis of today's freezing vs above-freezing regions."""
-        freezing_today, above_freezing_today = self.analyze_today_freezing()
+        freezing_today, frost_warning_today, above_freezing_today = self.analyze_today_freezing()
         
         print(f"\n{'='*80}")
         print(f"❄️  TODAY'S FREEZING ANALYSIS - {datetime.now().strftime('%Y-%m-%d')}")
@@ -1168,17 +1212,26 @@ class IndianaWeatherMonitor:
             print(f"{'City':<15} {'Region':<12} {'Min Temp':<10} {'Max Temp':<10} {'Status'}")
             print("-" * 70)
             for city_info in sorted(freezing_today, key=lambda x: x['min_temp']):
-                status = "FREEZE" if city_info['min_temp'] <= FREEZE_THRESHOLD else "FROST WARNING"
+                status = get_temp_status(city_info['min_temp'])
                 print(f"{city_info['city']:<15} {city_info['region']:<12} {city_info['min_temp']:>7.1f}°F {city_info['max_temp']:>7.1f}°F {status}")
         else:
             print("  ✅ No cities with freezing temperatures today!")
-        
+
+        print(f"\n🟫 REGIONS WITH FROST WARNING TEMPERATURES TODAY ({len(frost_warning_today)} cities):")
+        if frost_warning_today:
+            print(f"{'City':<15} {'Region':<12} {'Min Temp':<10} {'Max Temp':<10} {'Status'}")
+            print("-" * 70)
+            for city_info in sorted(frost_warning_today, key=lambda x: x['min_temp']):
+                print(f"{city_info['city']:<15} {city_info['region']:<12} {city_info['min_temp']:>7.1f}°F {city_info['max_temp']:>7.1f}°F {get_temp_status(city_info['min_temp'])}")
+        else:
+            print("  ✅ No cities in the frost warning range (32-40°F) today!")
+
         print(f"\n🟢 REGIONS ABOVE FREEZING TODAY ({len(above_freezing_today)} cities):")
         if above_freezing_today:
             print(f"{'City':<15} {'Region':<12} {'Min Temp':<10} {'Max Temp':<10} {'Status'}")
             print("-" * 70)
             for city_info in sorted(above_freezing_today, key=lambda x: x['min_temp'], reverse=True):
-                status = "WARM" if city_info['min_temp'] >= MILD_THRESHOLD else "MILD"
+                status = get_temp_status(city_info['min_temp'])
                 print(f"{city_info['city']:<15} {city_info['region']:<12} {city_info['min_temp']:>7.1f}°F {city_info['max_temp']:>7.1f}°F {status}")
         else:
             print("  ❌ All cities have freezing temperatures today!")
@@ -1274,7 +1327,9 @@ class IndianaWeatherMonitor:
             self.fetch_all_weather_data()
             
         print(f"\n{'='*80}")
-        print(f"🗺️  INDIANA WEATHER SUMMARY - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        shown_time = self.data_timestamp or datetime.now().strftime('%Y-%m-%d %H:%M')
+        suffix = " (cached)" if self.data_from_cache else ""
+        print(f"🗺️  INDIANA WEATHER SUMMARY - {shown_time}{suffix}")
         print(f"{'='*80}")
         
         city_data = []
