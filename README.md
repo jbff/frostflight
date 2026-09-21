@@ -18,17 +18,17 @@ The app monitors weather conditions across all 92 Indiana counties, providing co
 
 ## Installation
 
-1. Install Python 3.7 or higher
-2. Install required dependencies:
+1. Install [uv](https://docs.astral.sh/uv/) (`curl -LsSf https://astral.sh/uv/install.sh | sh` or `pipx install uv`)
+2. Sync dependencies (creates `.venv` and `uv.lock` automatically):
    ```bash
-   pip install -r requirements.txt
+   uv sync
    ```
 
 ## Usage
 
 ### Interactive Mode (Recommended)
 ```bash
-python indiana_weather_monitor.py
+uv run python indiana_weather_monitor.py
 ```
 
 This will start an interactive menu where you can:
@@ -40,13 +40,13 @@ This will start an interactive menu where you can:
 
 **Quick state summary:**
 ```bash
-python indiana_weather_monitor.py summary
+uv run python indiana_weather_monitor.py summary
 ```
 
 **Detailed forecast for a specific county:**
 ```bash
-python indiana_weather_monitor.py "Indianapolis"
-python indiana_weather_monitor.py "New Albany"
+uv run python indiana_weather_monitor.py "Indianapolis"
+uv run python indiana_weather_monitor.py "New Albany"
 ```
 
 ## Temperature Thresholds

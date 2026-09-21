@@ -1,0 +1,13 @@
+[project]
+name = "frostflight"
+version = "0.2.0"
+description = "Indiana RV weather monitor - freeze and frost risk tracking across all 92 counties"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31.0",
+    "tqdm>=4.65.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
