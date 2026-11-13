@@ -96,6 +96,39 @@ def test_failed_fetch_not_cached_or_marked_fetched(tmp_path, monkeypatch):
     assert not os.path.exists(m.cache_file)  # nothing cached from a total failure
 
 
+def test_failure_sweep_not_repeated_per_consumer(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    calls = []
+
+    def counting_fail(city, coords):
+        calls.append(city)
+        return None
+
+    monkeypatch.setattr(m, "get_weather_data", counting_fail)
+    m.get_county_temperature_data()
+    m.analyze_today_freezing()          # must NOT trigger a second 92-request sweep
+    # exactly one full sweep when the fetch already failed
+    assert len(calls) == len(iwm.INDIANA_CITIES)
+
+
+def test_total_failure_serves_stale_cache(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    write_cache(m.cache_file, {
+        "timestamp": "2026-09-20 08:00:00",
+        "weather_data": {"Peru": make_payload()},
+    })
+    old = os.path.getmtime(m.cache_file) - 7 * 3600
+    os.utime(m.cache_file, (old, old))
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
+    m.fetch_all_weather_data()
+    # live sweep failed, but the expired cache still holds good data:
+    # serve it rather than leaving the monitor with nothing at all
+    assert m.weather_data and "Peru" in m.weather_data
+    assert m.data_fetched is True
+    assert m.data_from_cache is True
+    assert m.data_timestamp == "2026-09-20 08:00:00"
+
+
 def test_partial_fetch_caches_successes_only(tmp_path, monkeypatch):
     m = make_monitor(tmp_path)
     cities = list(iwm.INDIANA_CITIES)

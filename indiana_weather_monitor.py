@@ -764,6 +764,7 @@ class IndianaWeatherMonitor:
         self.timezone = "America/Indiana/Indianapolis"
         self.weather_data = {}  # Cache for weather data
         self.data_fetched = False
+        self.fetch_attempted = False  # True once a live sweep has been tried
         self.cache_file = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "weather_cache.json"
         )
@@ -870,20 +871,36 @@ class IndianaWeatherMonitor:
     def _read_cache_payloads(self):
         """Raw per-city payloads from the cache file (even an expired one).
 
-        Returns a dict holding only the well-formed entries; empty when
-        the file is missing/unreadable/all-invalid. Unlike load_cache
-        this never touches instance state or prints.
+        Returns (payloads, timestamp): payloads holds only the
+        well-formed entries (empty when the file is missing/unreadable/
+        all-invalid), timestamp is the file's own 'cached at' value or
+        None. Unlike load_cache this never touches instance state or
+        prints.
         """
         try:
             with open(self.cache_file, 'r') as f:
                 cache_data = json.load(f)
             weather_data = cache_data.get('weather_data')
             if not isinstance(weather_data, dict):
-                return {}
-            return {city: d for city, d in weather_data.items()
-                    if is_valid_payload(d)}
+                return {}, None
+            payloads = {city: d for city, d in weather_data.items()
+                        if is_valid_payload(d)}
+            return payloads, cache_data.get('timestamp')
         except (OSError, ValueError, KeyError, AttributeError):
-            return {}
+            return {}, None
+
+    def ensure_data(self):
+        """Make sure a consumer has data before it renders.
+
+        Runs the fetch only when no good data is present AND no sweep
+        has already been attempted this session: a total fetch failure
+        must not make every menu option re-issue all 92 live requests
+        (the old per-consumer guard swept 92x92 times offline).
+        """
+        if self.data_fetched:
+            return
+        if not self.fetch_attempted:
+            self.fetch_all_weather_data()
 
     def fetch_all_weather_data(self, force_refresh=False):
         """Fetch weather data for all Indiana cities and cache it.
@@ -905,7 +922,9 @@ class IndianaWeatherMonitor:
                 return
 
         previous_data = dict(self.weather_data)
-        stale_cache = {} if force_refresh else self._read_cache_payloads()
+        stale_cache, stale_timestamp = ({}, None) if force_refresh \
+            else self._read_cache_payloads()
+        self.fetch_attempted = True
 
         print("🌡️  Fetching weather data for all Indiana cities...")
         print("This may take a moment...")
@@ -927,6 +946,14 @@ class IndianaWeatherMonitor:
                 # Offline force refresh: keep serving the last known-good data.
                 self.weather_data = previous_data
                 self.data_fetched = True
+            elif stale_cache:
+                # Nothing good in memory and the live sweep failed: the
+                # expired cache is still worth serving, clearly labeled.
+                self.weather_data = stale_cache
+                self.data_fetched = True
+                self.data_from_cache = True
+                self.data_timestamp = stale_timestamp
+                print(f"⚠️  Serving expired cached data from {stale_timestamp}")
             return
 
         # Live results win; cities the sweep missed fall back to the
@@ -992,8 +1019,7 @@ class IndianaWeatherMonitor:
     
     def get_county_temperature_data(self):
         """Get temperature data mapped by county ID."""
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
         
         county_temps = {}
         
@@ -1026,8 +1052,7 @@ class IndianaWeatherMonitor:
     
     def get_county_today_high_data(self):
         """Get today's high temperature data mapped by county ID."""
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
         
         county_temps = {}
         
@@ -1187,8 +1212,7 @@ class IndianaWeatherMonitor:
         Uses the index of today's date inside each city's daily array, so a
         cache fetched yesterday is never presented as today's data.
         """
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
 
         today = indiana_today()
         freezing_today = []
@@ -1225,8 +1249,7 @@ class IndianaWeatherMonitor:
     
     def analyze_week_freezing(self):
         """Analyze which regions have freezing temperatures in the next week."""
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
         
         freezing_this_week = []
         no_freezing_this_week = []
@@ -1345,8 +1368,7 @@ class IndianaWeatherMonitor:
         print(f"🌡️  {city} ({region})")
         print(f"{'='*60}")
         
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
         
         data = self.weather_data.get(city)
         if not is_valid_payload(data):
@@ -1399,8 +1421,7 @@ class IndianaWeatherMonitor:
     
     def display_state_summary(self):
         """Display a summary of all cities with current temperatures."""
-        if not self.data_fetched:
-            self.fetch_all_weather_data()
+        self.ensure_data()
             
         print(f"\n{'='*80}")
         shown_time = self.data_timestamp or datetime.now().strftime('%Y-%m-%d %H:%M')
