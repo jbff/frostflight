@@ -1432,13 +1432,7 @@ class IndianaWeatherMonitor:
     def display_state_summary(self):
         """Display a summary of all cities with current temperatures."""
         self.ensure_data()
-            
-        print(f"\n{'='*80}")
-        shown_time = self.data_timestamp or datetime.now().strftime('%Y-%m-%d %H:%M')
-        suffix = " (cached)" if self.data_from_cache else ""
-        print(f"🗺️  INDIANA WEATHER SUMMARY - {shown_time}{suffix}")
-        print(f"{'='*80}")
-        
+
         city_data = []
         
         for city, coords in INDIANA_CITIES.items():
@@ -1463,7 +1457,21 @@ class IndianaWeatherMonitor:
         
         # Sort by temperature (warmest first)
         city_data.sort(key=lambda x: x["temp"], reverse=True)
-        
+
+        if not city_data:
+            print("\n⚠️  No city data available for the summary - "
+                  "the fetch failed or the cache was unusable.")
+            return
+
+        # Freshness claims only above a table that actually has rows.
+        # An absent timestamp means we don't know when it was fetched,
+        # not that it's new.
+        shown_time = self.data_timestamp or "unknown time"
+        suffix = " (cached)" if self.data_from_cache else ""
+        print(f"\n{'='*80}")
+        print(f"🗺️  INDIANA WEATHER SUMMARY - {shown_time}{suffix}")
+        print(f"{'='*80}")
+
         print(f"{'City':<15} {'Region':<12} {'Temp':<8} {'Status':<15}")
         print("-" * 60)
         

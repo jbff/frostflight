@@ -416,6 +416,30 @@ def test_empty_week_analysis_reports_no_data_not_safety_claims(tmp_path, capsys)
     assert "All cities have freezing temperatures this week!" not in out
 
 
+def test_summary_with_no_data_shows_notice_not_freshness(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}                       # e.g. option-8 reload came up empty
+    m.data_fetched = True
+    m.data_timestamp = "2026-11-13 10:00:00"
+    m.data_from_cache = True
+    m.display_state_summary()
+    out = capsys.readouterr().out
+    assert "No city data" in out              # a notice, not the cached timestamp
+    assert "2026-11-13 10:00:00" not in out
+
+
+def test_summary_without_timestamp_does_not_show_wall_clock(capsys, tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload()}
+    m.data_fetched = True
+    m.data_timestamp = None                   # restored without a timestamp
+    m.data_from_cache = False
+    m.display_state_summary()
+    out = capsys.readouterr().out
+    assert "unknown time" in out
+    assert datetime.now().strftime("%Y-%m-%d %H:%M") not in out
+
+
 def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
     m = make_monitor(tmp_path)
     m.weather_data = {"Peru": make_payload()}
