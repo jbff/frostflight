@@ -867,13 +867,34 @@ class IndianaWeatherMonitor:
             print(f"Error fetching data for {city}: {e}")
             return None
     
+    def _read_cache_payloads(self):
+        """Raw per-city payloads from the cache file (even an expired one).
+
+        Returns a dict holding only the well-formed entries; empty when
+        the file is missing/unreadable/all-invalid. Unlike load_cache
+        this never touches instance state or prints.
+        """
+        try:
+            with open(self.cache_file, 'r') as f:
+                cache_data = json.load(f)
+            weather_data = cache_data.get('weather_data')
+            if not isinstance(weather_data, dict):
+                return {}
+            return {city: d for city, d in weather_data.items()
+                    if is_valid_payload(d)}
+        except (OSError, ValueError, KeyError, AttributeError):
+            return {}
+
     def fetch_all_weather_data(self, force_refresh=False):
         """Fetch weather data for all Indiana cities and cache it.
 
         Only marks data fetched / writes the cache when at least one
-        city fetch succeeded. A force refresh never destroys the
-        previous good data: fresh results are collected first and only
-        swapped in if the refetch produced anything.
+        city fetch succeeded. A live result never destroys the previous
+        good data: whatever the sweep misses keeps its last known
+        value, taken first from the in-memory store and then (when the
+        cache is expired but still readable) from the cache file
+        itself, so a flaky network blanks no counties and clobbers no
+        complete cache with a partial one.
         """
         if self.data_fetched and not force_refresh:
             return
@@ -883,7 +904,8 @@ class IndianaWeatherMonitor:
             if self.load_cache():
                 return
 
-        previous_data = self.weather_data if force_refresh else None
+        previous_data = dict(self.weather_data)
+        stale_cache = {} if force_refresh else self._read_cache_payloads()
 
         print("🌡️  Fetching weather data for all Indiana cities...")
         print("This may take a moment...")
@@ -907,10 +929,20 @@ class IndianaWeatherMonitor:
                 self.data_fetched = True
             return
 
-        self.weather_data = fresh_data
+        # Live results win; cities the sweep missed fall back to the
+        # previous good data (in-memory first, then the expired cache).
+        merged = dict(stale_cache)
+        merged.update(previous_data)
+        merged.update(fresh_data)
+        kept = len(merged) - len(fresh_data)
+
+        self.weather_data = merged
         self.data_fetched = True
         self.data_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.data_from_cache = False
+        if kept:
+            print(f"⚠️  Refreshed {len(fresh_data)}/{len(INDIANA_CITIES)} cities - "
+                  f"serving last known data for the other {kept}")
         print("✅ Weather data fetch complete!")
 
         # Save to cache

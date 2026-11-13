@@ -124,6 +124,48 @@ def test_force_refresh_offline_keeps_previous_good_data(tmp_path, monkeypatch):
     assert not os.path.exists(m.cache_file)
 
 
+def test_force_refresh_partial_keeps_previous_good_data(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload(), "Muncie": make_payload()}
+    m.data_fetched = True
+    cities = list(iwm.INDIANA_CITIES)
+    fresh = make_payload(min_temp=15.0)
+    monkeypatch.setattr(m, "get_weather_data",
+                        lambda city, coords: fresh if city == cities[0] else None)
+    m.fetch_all_weather_data(force_refresh=True)
+    # 1/92 succeeded: fresh wins for that city, previous good data survives
+    # for the 91 that failed (the old code discarded them wholesale).
+    assert m.weather_data[cities[0]] is fresh
+    assert m.weather_data["Muncie"] is m.weather_data["Muncie"]
+    assert len(m.weather_data) == 3      # Peru + Muncie (previous) + fresh Evansville
+    assert m.data_fetched is True
+
+
+def test_partial_fetch_falls_back_to_expired_cache_for_missed_cities(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    write_cache(m.cache_file, {
+        "timestamp": "2026-09-20 08:00:00",
+        "weather_data": {"Peru": make_payload(), "Muncie": make_payload()},
+    })
+    # make the cache expired so the fetch actually sweeps
+    old = os.path.getmtime(m.cache_file) - 7 * 3600
+    os.utime(m.cache_file, (old, old))
+    cities = list(iwm.INDIANA_CITIES)
+    fresh = make_payload(min_temp=15.0)
+    monkeypatch.setattr(m, "get_weather_data",
+                        lambda city, coords: fresh if city == cities[0] else None)
+    m.fetch_all_weather_data()
+    # 1/92 succeeded: the freshly fetched city is served, and the other
+    # 91 fall back to the expired cache's copies instead of vanishing
+    # (the old code overwrote the 92-city cache with the 1-city partial).
+    assert m.weather_data[cities[0]] is fresh
+    assert m.weather_data["Muncie"] is not None   # kept from the old cache
+    # and the rewritten cache still holds every city it had before
+    with open(m.cache_file) as f:
+        saved = json.load(f)["weather_data"]
+    assert set(saved) == {cities[0], "Muncie", "Peru"}
+
+
 def test_error_body_rejected_at_store_time(tmp_path, monkeypatch):
     m = make_monitor(tmp_path)
     monkeypatch.setattr(
