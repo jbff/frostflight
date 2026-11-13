@@ -18,6 +18,7 @@ import requests
 import json
 import os
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import sys
 from typing import Dict, List, Tuple
 from tqdm import tqdm
@@ -670,6 +671,15 @@ MILD_THRESHOLD = 60  # Fahrenheit - Mild conditions
 WARM_THRESHOLD = 70  # Fahrenheit - Warm conditions
 HOT_THRESHOLD = 85  # Fahrenheit - Hot conditions
 
+# Open-Meteo daily['time'] dates are America/Indiana/Indianapolis-local, so
+# every "today" lookup must use that zone - the host's local clock would give
+# yesterday (west of Indiana) or tomorrow (east of it).
+DATA_TIMEZONE = ZoneInfo("America/Indiana/Indianapolis")
+
+def indiana_today() -> str:
+    """Today's date in the data timezone, matching daily['time'] dates."""
+    return datetime.now(DATA_TIMEZONE).strftime('%Y-%m-%d')
+
 def is_valid_payload(data) -> bool:
     """Check an API/cache city payload is a well-formed forecast.
 
@@ -1002,7 +1012,7 @@ class IndianaWeatherMonitor:
             
             # Get today's maximum temperature by today's date, not blind day 0
             daily = data["daily"]
-            idx = get_today_index(daily, datetime.now().strftime('%Y-%m-%d'))
+            idx = get_today_index(daily, indiana_today())
             if idx == -1:
                 continue  # cached data predates today - skip
             today_max_temp = get_daily_value(data, "temperature_2m_max", idx)
@@ -1148,7 +1158,7 @@ class IndianaWeatherMonitor:
         if not self.data_fetched:
             self.fetch_all_weather_data()
 
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = indiana_today()
         freezing_today = []
         frost_warning_today = []
         above_freezing_today = []
@@ -1227,7 +1237,7 @@ class IndianaWeatherMonitor:
         freezing_today, frost_warning_today, above_freezing_today = self.analyze_today_freezing()
         
         print(f"\n{'='*80}")
-        print(f"❄️  TODAY'S FREEZING ANALYSIS - {datetime.now().strftime('%Y-%m-%d')}")
+        print(f"❄️  TODAY'S FREEZING ANALYSIS - {indiana_today()}")
         print(f"{'='*80}")
         
         print(f"\n🔴 REGIONS WITH FREEZING TEMPERATURES TODAY ({len(freezing_today)} cities):")

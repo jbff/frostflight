@@ -209,6 +209,28 @@ def test_get_today_index():
     assert iwm.get_today_index({}, "2026-09-21") == -1
 
 
+def test_today_lookups_use_indiana_timezone_not_local_clock(monkeypatch, tmp_path):
+    # daily['time'] holds America/Indiana/Indianapolis-local dates, so the
+    # "today" used for lookups must come from that timezone — a host west or
+    # east of Indiana would otherwise match yesterday/tomorrow or no day.
+    m = make_monitor(tmp_path)
+    # The array holds the naive machine-local date: the faulty implementation
+    # (datetime.now()) matches it and reports the city, while an Indiana-
+    # timezone-aware lookup (patched below to a date no array contains) does not.
+    today = datetime.now().strftime("%Y-%m-%d")
+    m.weather_data = {"Peru": {
+        "current_weather": {"temperature": 55.0},
+        "daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": [today]},
+    }}
+    m.data_fetched = True
+    # Claim "today" is a date no array contains while the local clock's date
+    # IS in the array: with the Indiana-timezone seam the city is excluded;
+    # with naive datetime.now() it leaks in as an analyzed city.
+    monkeypatch.setattr(iwm, "indiana_today", lambda: "2099-01-01", raising=False)
+    freezing, frost, above = m.analyze_today_freezing()
+    assert freezing == [] and frost == [] and above == []
+
+
 def test_get_daily_value_guards():
     data = {"daily": {"temperature_2m_min": [None, 45.2]}}
     assert iwm.get_daily_value(data, "temperature_2m_min", 1) == 45.2
@@ -239,9 +261,10 @@ def test_today_analysis_uses_current_date_not_cache_day0(tmp_path):
     m = make_monitor(tmp_path)
     # Cache was fetched "yesterday": daily[0] is yesterday's date, but
     # analysis must key today by the real current date, not blind day 0.
-    now = datetime.now()
-    today = now.strftime("%Y-%m-%d")
-    yesterday = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    # Derive dates from the same source the code looks today up with,
+    # so the test is valid regardless of the host's timezone.
+    today = iwm.indiana_today()
+    yesterday = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
     m.weather_data = {"Peru": {
         "current_weather": {"temperature": 55.0},
         "daily": {
@@ -261,7 +284,7 @@ def test_today_analysis_uses_current_date_not_cache_day0(tmp_path):
 def freeze_today(monkeypatch):
     class FakeDT(datetime):
         @classmethod
-        def now(cls):
+        def now(cls, *args, **kwargs):   # accepts tz arg like the real now()
             return datetime(2099, 1, 1)
     monkeypatch.setattr(iwm, "datetime", FakeDT)
 
