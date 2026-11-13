@@ -588,6 +588,30 @@ def test_every_city_has_a_region():
     assert not bad, f"{len(bad)} cities with blank/unknown region: {bad}"
 
 
+NORTH_REGIONS = {"North", "Northeast", "Northwest"}
+SOUTH_REGIONS = {"Southwest", "South Central", "Southeast"}
+
+
+def test_regions_match_city_coordinates():
+    bad = []
+    for city, c in iwm.INDIANA_CITIES.items():
+        region, lat = c["region"], c["lat"]
+        if region in NORTH_REGIONS and lat < 40.5:
+            bad.append(f"{city}: {region} for lat {lat:.2f}")
+        if region in SOUTH_REGIONS and lat > 39.6:
+            bad.append(f"{city}: {region} for lat {lat:.2f}")
+    assert not bad, f"{len(bad)} region/coordinate mismatches: {bad}"
+
+
+def test_corrected_region_labels():
+    # Knox (lat 41.30, Starke Co.) is north-central, not Southwest ~260km
+    # south of it; Washington (Daviess, lon -87.17) sits with the Southwest
+    # cities; Auburn (DeKalb, lon -85.06) is the state's NE corner.
+    assert iwm.INDIANA_CITIES["Knox"]["region"] == "Northwest"
+    assert iwm.INDIANA_CITIES["Washington"]["region"] == "Southwest"
+    assert iwm.INDIANA_CITIES["Auburn"]["region"] == "Northeast"
+
+
 def test_freezing_tables_have_regions(tmp_path, capsys, freeze_today):
     m = make_monitor(tmp_path)
     payload = make_payload(min_temp=25.0)

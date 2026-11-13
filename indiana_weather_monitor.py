@@ -42,7 +42,7 @@ INDIANA_CITIES = {
     "lat": 38.659387,
     "lon": -87.171883,
     "county": "Daviess",
-    "region": "South Central"
+    "region": "Southwest"
   },
   "Vincennes": {
     "lat": 38.676353,
@@ -132,7 +132,7 @@ INDIANA_CITIES = {
     "lat": 41.366455,
     "lon": -85.055219,
     "county": "DeKalb",
-    "region": "North"
+    "region": "Northeast"
   },
   "Rochester": {
     "lat": 41.06547,
@@ -270,7 +270,7 @@ INDIANA_CITIES = {
     "lat": 41.299536,
     "lon": -86.622246,
     "county": "Knox",
-    "region": "Southwest"
+    "region": "Northwest"
   },
   "Lafayette": {
     "lat": 40.417991,
