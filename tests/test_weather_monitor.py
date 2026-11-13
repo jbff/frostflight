@@ -310,10 +310,13 @@ def test_state_summary_skips_city_without_current_weather(capsys, tmp_path):
 
 def test_today_analysis_survives_unknown_cache_keys(tmp_path, capsys):
     m = make_monitor(tmp_path)
+    # Daily dates must track the runtime date or get_today_index returns -1
+    # on every other calendar day (same fault as the day-0 test above).
+    today = datetime.now().strftime("%Y-%m-%d")
     # Cache written by the old 13-city build: contains "Gary", missing from INDIANA_CITIES
     m.weather_data = {
-        "Gary": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [10.0], "temperature_2m_max": [20.0], "time": ["2026-09-21"]}},
-        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": ["2026-09-21"]}},
+        "Gary": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [10.0], "temperature_2m_max": [20.0], "time": [today]}},
+        "Peru": {"current_weather": {"temperature": 55.0}, "daily": {"temperature_2m_min": [25.0], "temperature_2m_max": [40.0], "time": [today]}},
     }
     m.data_fetched = True
     freezing, frost, above = m.analyze_today_freezing()   # used to raise KeyError: 'Gary'
