@@ -517,6 +517,19 @@ def test_city_view_retries_live_when_prefetch_missed(tmp_path, monkeypatch, caps
     assert m.weather_data.get("Jasper") is not None   # live result cached in memory
 
 
+def test_city_view_retry_persists_to_cache(tmp_path, monkeypatch, capsys):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}
+    m.data_fetched = True
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: make_payload(min_temp=28.0))
+    m.display_city_weather("Jasper", {"lat": 38.39, "lon": -86.93}, "Southwest")
+    # the healed city must survive restarts, not just live in this memory
+    assert os.path.exists(m.cache_file)
+    with open(m.cache_file) as f:
+        saved = json.load(f)["weather_data"]
+    assert "Jasper" in saved
+
+
 def test_city_view_reports_failure_when_retry_also_fails(tmp_path, monkeypatch, capsys):
     m = make_monitor(tmp_path)
     m.weather_data = {}

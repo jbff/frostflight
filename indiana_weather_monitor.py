@@ -1388,6 +1388,9 @@ class IndianaWeatherMonitor:
             data = self.get_weather_data(city, coords)
             if is_valid_payload(data):
                 self.weather_data[city] = data
+                # Persist the healed city: memory alone loses it on restart
+                # or refresh, and the maps/analyses would re-miss it forever.
+                self.save_cache()
             else:
                 print(f"❌ No data available for {city}")
                 return
