@@ -1294,7 +1294,12 @@ class IndianaWeatherMonitor:
         print(f"\n{'='*80}")
         print(f"❄️  TODAY'S FREEZING ANALYSIS - {indiana_today()}")
         print(f"{'='*80}")
-        
+
+        if not (freezing_today or frost_warning_today or above_freezing_today):
+            print("\n⚠️  No city data available for today's analysis - "
+                  "the fetch failed or the cached forecasts predate today.")
+            return
+
         print(f"\n🔴 REGIONS WITH FREEZING TEMPERATURES TODAY ({len(freezing_today)} cities):")
         if freezing_today:
             print(f"{'City':<15} {'Region':<12} {'Min Temp':<10} {'Max Temp':<10} {'Status'}")
@@ -1331,7 +1336,12 @@ class IndianaWeatherMonitor:
         print(f"\n{'='*80}")
         print(f"📅 NEXT WEEK FREEZING ANALYSIS")
         print(f"{'='*80}")
-        
+
+        if not (freezing_this_week or no_freezing_this_week):
+            print("\n⚠️  No city data available for the week analysis - "
+                  "the fetch failed or no forecasts are loaded.")
+            return
+
         print(f"\n🔴 REGIONS WITH FREEZING TEMPERATURES THIS WEEK ({len(freezing_this_week)} cities):")
         if freezing_this_week:
             print(f"{'City':<15} {'Region':<12} {'Freeze Days':<15} {'Details'}")

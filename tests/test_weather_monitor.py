@@ -394,6 +394,28 @@ def test_today_analysis_three_way_split(tmp_path, freeze_today):
     assert [c["city"] for c in above] == ["Evansville"]
 
 
+def test_empty_today_analysis_reports_no_data_not_safety_claims(tmp_path, capsys):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}          # offline first run: nothing was analyzed
+    m.data_fetched = True
+    m.display_today_freezing_analysis()
+    out = capsys.readouterr().out
+    assert "No city data" in out
+    assert "No cities with freezing temperatures today!" not in out
+    assert "All cities have freezing temperatures today!" not in out
+
+
+def test_empty_week_analysis_reports_no_data_not_safety_claims(tmp_path, capsys):
+    m = make_monitor(tmp_path)
+    m.weather_data = {}
+    m.data_fetched = True
+    m.display_week_freezing_analysis()
+    out = capsys.readouterr().out
+    assert "No city data" in out
+    assert "No cities with freezing temperatures this week!" not in out
+    assert "All cities have freezing temperatures this week!" not in out
+
+
 def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
     m = make_monitor(tmp_path)
     m.weather_data = {"Peru": make_payload()}
