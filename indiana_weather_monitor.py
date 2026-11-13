@@ -1513,8 +1513,12 @@ class IndianaWeatherMonitor:
                 self.display_indiana_today_high_map()
             elif choice == "8":
                 print("🔄 Refreshing weather data from cache...")
+                # Drop only the "data is good" flags; wiping weather_data
+                # here destroyed in-memory good data when the reload then
+                # failed offline (the merge in fetch_all_weather_data
+                # keeps it as fallback).
                 self.data_fetched = False
-                self.weather_data = {}
+                self.fetch_attempted = False
                 self.fetch_all_weather_data()
             elif choice == "9":
                 print("🔄 Force refreshing weather data from API...")

@@ -111,6 +111,20 @@ def test_failure_sweep_not_repeated_per_consumer(tmp_path, monkeypatch):
     assert len(calls) == len(iwm.INDIANA_CITIES)
 
 
+def test_menu_refresh_does_not_destroy_good_data(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": make_payload()}
+    m.data_fetched = True
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: None)
+    answers = iter(["8", "10"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+    m.run_interactive_mode()
+    # option 8 with the network down must keep the good in-memory data
+    # (the old handler wiped weather_data before fetching)
+    assert "Peru" in m.weather_data
+    assert m.data_fetched is True
+
+
 def test_total_failure_serves_stale_cache(tmp_path, monkeypatch):
     m = make_monitor(tmp_path)
     write_cache(m.cache_file, {
