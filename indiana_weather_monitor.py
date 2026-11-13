@@ -811,6 +811,24 @@ class IndianaWeatherMonitor:
                 print("❌ Cache contains no valid city data")
                 return False
 
+            # Cities the cache holds but validation rejected (e.g. legacy
+            # error bodies) vanish silently otherwise - name them and try
+            # to recover the ones we can fetch live.
+            dropped = [city for city in weather_data
+                       if city not in valid_data]
+            if dropped:
+                known = [city for city in dropped if city in INDIANA_CITIES]
+                print(f"⚠️  {len(dropped)} cached cities failed validation: "
+                      f"{', '.join(dropped[:10])}{'...' if len(dropped) > 10 else ''}")
+                recovered = 0
+                for city in known:
+                    data = self.get_weather_data(city, INDIANA_CITIES[city])
+                    if is_valid_payload(data):
+                        valid_data[city] = data
+                        recovered += 1
+                print(f"🔁 Live-recovered {recovered}/{len(known)} "
+                      f"of the rejected cities")
+
             self.weather_data = valid_data
             self.data_fetched = True
             self.data_timestamp = cache_data.get('timestamp', 'Unknown')

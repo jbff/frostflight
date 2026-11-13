@@ -54,6 +54,41 @@ def test_load_cache_survives_garbage_bytes(tmp_path):
     assert m.load_cache() is False
 
 
+def test_load_cache_names_dropped_cities_and_refetches_them(tmp_path, monkeypatch, capsys):
+    m = make_monitor(tmp_path)
+    write_cache(m.cache_file, {
+        "timestamp": "2026-09-20 08:00:00",
+        "weather_data": {
+            "Peru": make_payload(),
+            "Muncie": {"error": True, "reason": "quota"},   # legacy error body
+        },
+    })
+    refetched = []
+    def failing_refetch(city, coords):
+        refetched.append(city)
+        return None
+    monkeypatch.setattr(m, "get_weather_data", failing_refetch)
+    assert m.load_cache() is True          # the valid city still loads
+    assert "Peru" in m.weather_data
+    out = capsys.readouterr().out
+    assert "Muncie" in out                 # the drop is named, not silent
+    assert refetched == ["Muncie"]         # a live top-up was attempted
+
+
+def test_load_cache_topup_recovers_dropped_city(tmp_path, monkeypatch):
+    m = make_monitor(tmp_path)
+    write_cache(m.cache_file, {
+        "timestamp": "2026-09-20 08:00:00",
+        "weather_data": {
+            "Peru": make_payload(),
+            "Muncie": {"error": True, "reason": "quota"},
+        },
+    })
+    monkeypatch.setattr(m, "get_weather_data", lambda city, coords: make_payload())
+    assert m.load_cache() is True
+    assert set(m.weather_data) == {"Peru", "Muncie"}   # Muncie recovered live
+
+
 def test_load_cache_accepts_good_cache_and_stamps_it(tmp_path):
     m = make_monitor(tmp_path)
     write_cache(m.cache_file, {
