@@ -475,6 +475,62 @@ def test_summary_without_timestamp_does_not_show_wall_clock(capsys, tmp_path):
     assert datetime.now().strftime("%Y-%m-%d %H:%M") not in out
 
 
+def test_payload_gate_allows_nulls_but_never_bools_or_strings():
+    payload = make_payload()
+    nulled = make_payload()
+    nulled["daily"]["temperature_2m_min"][0] = None    # one null forecast day...
+    nulled["daily"]["temperature_2m_max"][0] = None
+    assert iwm.is_valid_payload(nulled) is True        # ...must not cost the whole city
+    bools = make_payload()
+    bools["daily"]["temperature_2m_min"][0] = True
+    assert iwm.is_valid_payload(bools) is False
+    strings = make_payload()
+    strings["daily"]["temperature_2m_min"][0] = "40"
+    assert iwm.is_valid_payload(strings) is False
+
+
+def test_payload_gate_rejects_non_string_time_entries():
+    bad = make_payload()
+    bad["daily"]["time"] = [12345, "2026-09-22"]
+    assert iwm.is_valid_payload(bad) is False
+    null_times = make_payload()
+    null_times["daily"]["time"] = [None, "2026-09-22"]
+    assert iwm.is_valid_payload(null_times) is False
+
+
+def test_city_view_skips_null_forecast_rows(tmp_path, capsys):
+    m = make_monitor(tmp_path)
+    payload = make_payload(min_temp=80.0)
+    payload["daily"] = {
+        "temperature_2m_min": [None, 30.0],
+        "temperature_2m_max": [None, 60.0],
+        "time": ["2026-01-01", "2026-01-02"],
+    }
+    m.weather_data = {"Peru": payload}
+    m.data_fetched = True
+    m.display_city_weather("Peru", {"lat": 40.75, "lon": -86.07}, "North")
+    out = capsys.readouterr().out
+    assert "2026-01-02" in out          # day 2 still renders
+    assert "2026-01-01" not in out.split("7-Day Forecast")[1].split("Recommendation")[0]
+
+
+def test_today_high_map_skips_malformed_city(tmp_path):
+    m = make_monitor(tmp_path)
+    m.weather_data = {"Peru": {"error": True}}   # direct injection / legacy cache
+    m.data_fetched = True
+    assert m.get_county_today_high_data() == {}  # must skip, not KeyError
+
+
+def test_city_view_never_renders_bool_windspeed(tmp_path, capsys):
+    m = make_monitor(tmp_path)
+    payload = make_payload()
+    payload["current_weather"]["windspeed"] = True
+    m.weather_data = {"Peru": payload}
+    m.data_fetched = True
+    m.display_city_weather("Peru", {"lat": 40.75, "lon": -86.07}, "North")
+    assert "Wind:" not in capsys.readouterr().out
+
+
 def test_state_summary_header_shows_data_timestamp(capsys, tmp_path):
     m = make_monitor(tmp_path)
     m.weather_data = {"Peru": make_payload()}

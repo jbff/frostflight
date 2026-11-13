@@ -684,13 +684,16 @@ def is_valid_payload(data) -> bool:
     """Check an API/cache city payload is a well-formed forecast.
 
     Rejects None, JSON arrays, Open-Meteo 200-with-error bodies
-    ({"error": true, "reason": ...}), payloads whose daily arrays
-    are missing, empty, or contain null or boolean values, and
-    payloads whose current_weather is not a dict holding a numeric
-    temperature (older-build caches). Rejection is per city: every
-    consumer (load_cache, the bulk fetch, the analysis and display
-    loops) skips a rejected city instead of discarding the whole
-    cache or view.
+    ({"error": true, "reason": ...}), payloads whose daily arrays are
+    missing, empty, contain boolean or string values, or whose time
+    entries are not strings, and payloads whose current_weather is not
+    a dict holding a numeric temperature (older-build caches). Null
+    entries in the temperature arrays are allowed: one null forecast
+    day must not cost a city its map/summary presence, and every value
+    reader (get_daily_value, the analysis loops, the per-city table)
+    skips nulls individually. Rejection is per city: every consumer
+    (load_cache, the bulk fetch, the analysis and display loops) skips
+    a rejected city instead of discarding the whole cache or view.
     """
     daily = data.get("daily") if isinstance(data, dict) else None
     if not isinstance(daily, dict):
@@ -700,8 +703,12 @@ def is_valid_payload(data) -> bool:
     times = daily.get("time")
     if not all(isinstance(a, list) and a for a in (min_temps, max_temps, times)):
         return False
+    # The time array indexes the forecast; a non-string entry breaks
+    # every date lookup and display split downstream.
+    if not all(isinstance(t, str) and t for t in times):
+        return False
     if not all(
-        isinstance(t, (int, float)) and not isinstance(t, bool)
+        t is None or (isinstance(t, (int, float)) and not isinstance(t, bool))
         for t in list(min_temps) + list(max_temps)
     ):
         return False
@@ -1075,7 +1082,7 @@ class IndianaWeatherMonitor:
         county_temps = {}
         
         for city, data in self.weather_data.items():
-            if not data:
+            if not is_valid_payload(data):
                 continue
                 
             # Use the correct county mapping instead of the incorrect one in INDIANA_CITIES
@@ -1200,6 +1207,8 @@ class IndianaWeatherMonitor:
         comfortable_days = []
         
         for i, (date, min_temp, max_temp) in enumerate(zip(dates, min_temps, max_temps)):
+            if not isinstance(min_temp, (int, float)) or isinstance(min_temp, bool):
+                continue    # null day: not comparable to thresholds
             if min_temp <= FREEZE_THRESHOLD:
                 freeze_days.append((date, min_temp, max_temp))
             elif min_temp <= FROST_WARNING_THRESHOLD:
@@ -1423,7 +1432,7 @@ class IndianaWeatherMonitor:
         windspeed = current.get("windspeed")
 
         print(f"Current Temperature: {current_color} {current_temp:.1f}°F {self.get_weather_emoji(current_temp)}")
-        if isinstance(windspeed, (int, float)):
+        if isinstance(windspeed, (int, float)) and not isinstance(windspeed, bool):
             print(f"Wind: {windspeed:.1f} mph")
         print(f"Last Updated: {current.get('time', 'Unknown')}")
         
@@ -1436,6 +1445,14 @@ class IndianaWeatherMonitor:
         print("-" * 50)
         
         for i, (date, min_temp, max_temp) in enumerate(zip(daily["time"], daily["temperature_2m_min"], daily["temperature_2m_max"])):
+            # Null forecast days are allowed by the payload gate; a row
+            # is shown only when both values are real numbers.
+            temps_ok = (
+                isinstance(min_temp, (int, float)) and not isinstance(min_temp, bool)
+                and isinstance(max_temp, (int, float)) and not isinstance(max_temp, bool)
+            )
+            if not temps_ok:
+                continue
             min_color = self.get_temperature_color(min_temp)
             max_color = self.get_temperature_color(max_temp)
             
